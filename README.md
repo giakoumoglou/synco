@@ -14,10 +14,10 @@ This is a PyTorch implementation of the [SynCo paper](https://arxiv.org/abs/XXXX
 
 Install PyTorch and ImageNet dataset following the [official PyTorch ImageNet training code](https://github.com/pytorch/examples/tree/master/imagenet).
 
-This repo aims to be minimal modifications on that code. Check the modifications by:
+This repo is based on [MoCo v2 code](https://github.com/facebookresearch/moco):
 ```
-diff main_moco.py <(curl https://raw.githubusercontent.com/pytorch/examples/master/imagenet/main.py)
-diff main_lincls.py <(curl https://raw.githubusercontent.com/pytorch/examples/master/imagenet/main.py)
+diff main_synco.py <(curl https://raw.githubusercontent.com/facebookresearch/moco/main_moco.py)
+diff main_lincls.py <(curl https://raw.githubusercontent.com/facebookresearch/moco/main_lincls.py)
 ```
 
 
