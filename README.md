@@ -39,6 +39,8 @@ python main_moco.py \
 
 This script uses all the default hyper-parameters as described in the [MoCo v2 paper](https://arxiv.org/abs/1911.05722).
 
+To run SynCo+, set `--plus`.
+
 ### Linear Classification
 
 With a pre-trained model, to train a supervised linear classifier on frozen features/weights in an 8-gpu machine, run:
