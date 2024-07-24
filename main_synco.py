@@ -1,8 +1,10 @@
-# Copyright (C) 2024. All rights reserved.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
+#!/usr/bin/env python
+
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+
+# This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
+
 
 import argparse
 import builtins
@@ -13,8 +15,6 @@ import shutil
 import time
 import warnings
 
-import synco.builder
-import synco.loader
 import torch
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
@@ -27,6 +27,9 @@ import torch.utils.data.distributed
 import torchvision.datasets as datasets
 import torchvision.models as models
 import torchvision.transforms as transforms
+
+import synco.builder
+import synco.loader
 
 
 model_names = sorted(name for name in models.__dict__ if name.islower() and not name.startswith("__") and callable(models.__dict__[name]))
@@ -41,11 +44,11 @@ parser.add_argument("-b", "--batch-size", default=256, type=int, metavar="N", he
 parser.add_argument("--lr", "--learning-rate",  default=0.03,  type=float, metavar="LR",  help="initial learning rate",  dest="lr",)
 parser.add_argument("--schedule", default=[120, 160], nargs="*", type=int, help="learning rate schedule (when to drop lr by 10x)",)
 parser.add_argument("--momentum", default=0.9, type=float, metavar="M", help="momentum of SGD solver")
-parser.add_argument( "--wd", "--weight-decay", default=1e-4, type=float, metavar="W", help="weight decay (default: 1e-4)", dest="weight_decay",)
+parser.add_argument("--wd", "--weight-decay", default=1e-4, type=float, metavar="W", help="weight decay (default: 1e-4)", dest="weight_decay",)
 parser.add_argument("-p", "--print-freq", default=10, type=int, metavar="N", help="print frequency (default: 10)",)
 parser.add_argument( "--resume", default="", type=str, metavar="PATH", help="path to latest checkpoint (default: none)",)
 parser.add_argument("--world-size", default=-1, type=int, help="number of nodes for distributed training",)
-parser.add_argument( "--rank", default=-1, type=int, help="node rank for distributed training")
+parser.add_argument("--rank", default=-1, type=int, help="node rank for distributed training")
 parser.add_argument("--dist-url", default="tcp://224.66.41.62:23456", type=str, help="url used to set up distributed training",)
 parser.add_argument("--dist-backend", default="nccl", type=str, help="distributed backend")
 parser.add_argument("--seed", default=None, type=int, help="seed for initializing training. ")
