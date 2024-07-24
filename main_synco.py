@@ -46,7 +46,7 @@ parser.add_argument("--schedule", default=[120, 160], nargs="*", type=int, help=
 parser.add_argument("--momentum", default=0.9, type=float, metavar="M", help="momentum of SGD solver")
 parser.add_argument("--wd", "--weight-decay", default=1e-4, type=float, metavar="W", help="weight decay (default: 1e-4)", dest="weight_decay",)
 parser.add_argument("-p", "--print-freq", default=10, type=int, metavar="N", help="print frequency (default: 10)",)
-parser.add_argument( "--resume", default="", type=str, metavar="PATH", help="path to latest checkpoint (default: none)",)
+parser.add_argument("--resume", default="", type=str, metavar="PATH", help="path to latest checkpoint (default: none)",)
 parser.add_argument("--world-size", default=-1, type=int, help="number of nodes for distributed training",)
 parser.add_argument("--rank", default=-1, type=int, help="node rank for distributed training")
 parser.add_argument("--dist-url", default="tcp://224.66.41.62:23456", type=str, help="url used to set up distributed training",)
@@ -149,6 +149,7 @@ def main_worker(gpu, ngpus_per_node, args):
             world_size=args.world_size,
             rank=args.rank,
         )
+        
     # create model
     print("=> creating model '{}'".format(args.arch))
     model = synco.builder.SynCo(
@@ -200,6 +201,7 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         # AllGather implementation (batch shuffle, queue update, etc.) in
         # this code only supports DistributedDataParallel.
+        model = torch.nn.DataParallel(model).cuda()
         raise NotImplementedError("Only DistributedDataParallel is supported.")
 
     # define loss function (criterion) and optimizer
@@ -225,11 +227,7 @@ def main_worker(gpu, ngpus_per_node, args):
             args.start_epoch = checkpoint["epoch"]
             model.load_state_dict(checkpoint["state_dict"])
             optimizer.load_state_dict(checkpoint["optimizer"])
-            print(
-                "=> loaded checkpoint '{}' (epoch {})".format(
-                    args.resume, checkpoint["epoch"]
-                )
-            )
+            print("=> loaded checkpoint '{}' (epoch {})".format(args.resume, checkpoint["epoch"]))
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
 
@@ -393,7 +391,6 @@ def save_checkpoint(state, is_best, filename="checkpoint.pth.tar", path='./'):
 
 class AverageMeter:
     """Computes and stores the average and current value"""
-
     def __init__(self, name, fmt=":f"):
         self.name = name
         self.fmt = fmt
