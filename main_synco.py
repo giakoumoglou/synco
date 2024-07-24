@@ -36,7 +36,7 @@ parser.add_argument("data", metavar="DIR", help="path to dataset")
 parser.add_argument("-a", "--arch", metavar="ARCH", default="resnet50", choices=model_names, help="model architecture: " + " | ".join(model_names) + " (default: resnet50)",)
 parser.add_argument("-j", "--workers", default=32, type=int, metavar="N", help="number of data loading workers (default: 32)",)
 parser.add_argument("--epochs", default=200, type=int, metavar="N", help="number of total epochs to run")
-parser.add_argument( "--start-epoch", default=0, type=int, metavar="N", help="manual epoch number (useful on restarts)",)
+parser.add_argument("--start-epoch", default=0, type=int, metavar="N", help="manual epoch number (useful on restarts)",)
 parser.add_argument("-b", "--batch-size", default=256, type=int, metavar="N", help="mini-batch size (default: 256), this is the total batch size of all GPUs on the current node when using Data Parallel or Distributed Data Parallel",)
 parser.add_argument("--lr", "--learning-rate",  default=0.03,  type=float, metavar="LR",  help="initial learning rate",  dest="lr",)
 parser.add_argument("--schedule", default=[120, 160], nargs="*", type=int, help="learning rate schedule (when to drop lr by 10x)",)
@@ -55,7 +55,7 @@ parser.add_argument("--save-dir", default="./results", type=str, help="directory
 
 # moco specific configs:
 parser.add_argument("--moco-dim", default=128, type=int, help="feature dimension (default: 128)")
-parser.add_argument( "--moco-k", default=65536, type=int, help="queue size; number of negative keys (default: 65536)",)
+parser.add_argument("--moco-k", default=65536, type=int, help="queue size; number of negative keys (default: 65536)",)
 parser.add_argument("--moco-m", default=0.999, type=float, help="moco momentum of updating key encoder (default: 0.999)",)
 parser.add_argument("--moco-t", default=0.07, type=float, help="softmax temperature (default: 0.07)")
 
