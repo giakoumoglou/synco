@@ -255,7 +255,7 @@ class SynCo(nn.Module):
         hard_negatives_final = torch.stack(hard_negatives_list, dim=1)
         return nn.functional.normalize(hard_negatives_final, dim=-1).detach()
 
-    def forward(self, im_q, im_k):
+    def forward(self, im_q, im_k, epoch):
         """
         Input:
             im_q: a batch of query images
