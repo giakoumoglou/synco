@@ -1,7 +1,6 @@
-# Copyright (C) 2024. All rights reserved.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+
+# This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
 import torch
@@ -12,16 +11,29 @@ class SynCo(nn.Module):
     """
     Build a SynCo model (based on MoCo) with: a query encoder, a key encoder, and a queue
     """
-    def __init__(self, base_encoder, dim=128, K=65536, m=0.999, T=0.07, mlp=False,
+    def __init__(self, base_encoder, dim=128, K=65536, m=0.999, T=0.07, mlp=True,
                  n_hard=1024, n1=256, n2=256, n3=256, n4=64, n5=64, n6=64,
                  sigma=0.1, delta=0.01, eta=0.01,
-                 plus=False,
+                 warmup_epochs=10,
                  ):
         """
-        dim: feature dimension (default: 128)
-        K: queue size; number of negative keys (default: 65536)
-        m: moco momentum of updating key encoder (default: 0.999)
-        T: softmax temperature (default: 0.07)
+        base_encoder (nn.Module): The base encoder architecture (e.g., ResNet)
+        dim (int): Feature dimension (default: 128)
+        K (int): Queue size; number of negative keys (default: 65536)
+        m (float): MoCo momentum for updating key encoder (default: 0.999)
+        T (float): Softmax temperature (default: 0.07)
+        mlp (bool): Whether to use MLP head (default: True)
+        n_hard (int): Number of hard negatives to consider (default: 1024)
+        n1 (int): Number of type 1 hard negatives (interpolation) (default: 256)
+        n2 (int): Number of type 2 hard negatives (extrapolation) (default: 256)
+        n3 (int): Number of type 3 hard negatives (mixup) (default: 256)
+        n4 (int): Number of type 4 hard negatives (noise injection) (default: 64)
+        n5 (int): Number of type 5 hard negatives (gradient-based) (default: 64)
+        n6 (int): Number of type 6 hard negatives (adversarial) (default: 64)
+        sigma (float): Noise level for type 4 hard negatives (default: 0.1)
+        delta (float): Perturbation strength for type 5 hard negatives (default: 0.01)
+        eta (float): Step size for type 6 hard negatives (default: 0.01)
+        warmup_epochs (int): Number of warmup epochs without hard negatives (default: 10)
         """
         super(SynCo, self).__init__()
 
@@ -37,6 +49,7 @@ class SynCo(nn.Module):
         self.sigma = sigma    # noise inject
         self.delta = delta    # perturbed
         self.eta = eta        # adversarial
+        self.warmup_epochs = warmup_epochs
         
         self.n_hard = n_hard
         self.n1 = n1
@@ -59,41 +72,12 @@ class SynCo(nn.Module):
         # num_classes is the output fc dimension
         self.encoder_q = base_encoder(num_classes=dim)
         self.encoder_k = base_encoder(num_classes=dim)
-
-        # plus or mlp: synco or synco+
-        if plus: mlp=False
         
-        if mlp:  # hack: brute-force replacement
+        if mlp == True:  # hack: brute-force replacement
             dim_mlp = self.encoder_q.fc.weight.shape[1]
             self.encoder_q.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_q.fc)
             self.encoder_k.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_k.fc)
             
-        if plus:
-            self.encoder_q.fc = nn.Sequential(
-                nn.Linear(dim_mlp, dim_mlp, bias=False),
-                nn.BatchNorm1d(dim_mlp),
-                nn.ReLU(inplace=True),
-                nn.Linear(dim_mlp, dim_mlp, bias=False),
-                nn.BatchNorm1d(dim_mlp),
-                nn.ReLU(inplace=True),
-                nn.Linear(dim_mlp, dim, bias=False),
-                nn.BatchNorm1d(dim, affine=False),
-                nn.Linear(dim, dim_mlp, bias=False),
-                nn.BatchNorm1d(dim_mlp),
-                nn.ReLU(inplace=True),
-                self.encoder_q.fc
-                )
-            self.encoder_k.fc = nn.Sequential(
-                nn.Linear(dim_mlp, dim_mlp, bias=False),
-                nn.BatchNorm1d(dim_mlp),
-                nn.ReLU(inplace=True),
-                nn.Linear(dim_mlp, dim_mlp, bias=False),
-                nn.BatchNorm1d(dim_mlp),
-                nn.ReLU(inplace=True),
-                self.encoder_k.fc,
-                nn.BatchNorm1d(dim, affine=False)
-                )
-
         for param_q, param_k in zip(self.encoder_q.parameters(), self.encoder_k.parameters()):
             param_k.data.copy_(param_q.data)  # initialize
             param_k.requires_grad = False     # not update by gradient
@@ -303,39 +287,41 @@ class SynCo(nn.Module):
         # negative logits: NxK
         l_neg = torch.einsum("nc,ck->nk", [q, self.queue.T.clone().detach()])
         
-        # N-hardest negatives
-        idxs_hard = self.find_hard_negatives(l_neg)
         
-        # append negative logits with harder negatives
-        if self.use_type1:
-            h1 = self.hard_negatives_interpolation(q, idxs_hard)
-            l_neg_1 = torch.einsum("nc,nkc->nk", [q, h1])
-            l_neg = torch.cat([l_neg, l_neg_1], dim=1)
-
-        if self.use_type2:
-            h2 = self.hard_negatives_extrapolation(q, idxs_hard)
-            l_neg_2 = torch.einsum("nc,nkc->nk", [q, h2])
-            l_neg = torch.cat([l_neg, l_neg_2], dim=1)
+        if epoch is None or epoch >= self.warmup_epochs:
+            # N-hardest negatives
+            idxs_hard = self.find_hard_negatives(l_neg)
             
-        if self.use_type3:
-            h3 = self.hard_negatives_mixup(q, idxs_hard)
-            l_neg_3 = torch.einsum("nc,nkc->nk", [q, h3])
-            l_neg = torch.cat([l_neg, l_neg_3], dim=1)
+            # append negative logits with harder negatives
+            if self.use_type1:
+                h1 = self.hard_negatives_interpolation(q, idxs_hard)
+                l_neg_1 = torch.einsum("nc,nkc->nk", [q, h1])
+                l_neg = torch.cat([l_neg, l_neg_1], dim=1)
 
-        if self.use_type4:
-            h4 = self.hard_negatives_noise_inject(q, idxs_hard)
-            l_neg_4 = torch.einsum("nc,nkc->nk", [q, h4])
-            l_neg = torch.cat([l_neg, l_neg_4], dim=1)
-            
-        if self.use_type5:
-            h5 = self.hard_negatives_grad(q, idxs_hard)
-            l_neg_5 = torch.einsum("nc,nkc->nk", [q, h5])
-            l_neg = torch.cat([l_neg, l_neg_5], dim=1)
+            if self.use_type2:
+                h2 = self.hard_negatives_extrapolation(q, idxs_hard)
+                l_neg_2 = torch.einsum("nc,nkc->nk", [q, h2])
+                l_neg = torch.cat([l_neg, l_neg_2], dim=1)
+                
+            if self.use_type3:
+                h3 = self.hard_negatives_mixup(q, idxs_hard)
+                l_neg_3 = torch.einsum("nc,nkc->nk", [q, h3])
+                l_neg = torch.cat([l_neg, l_neg_3], dim=1)
 
-        if self.use_type6:
-            h6 = self.hard_negatives_adversarial(q, idxs_hard)
-            l_neg_6 = torch.einsum("nc,nkc->nk", [q, h6])
-            l_neg = torch.cat([l_neg, l_neg_6], dim=1)
+            if self.use_type4:
+                h4 = self.hard_negatives_noise_inject(q, idxs_hard)
+                l_neg_4 = torch.einsum("nc,nkc->nk", [q, h4])
+                l_neg = torch.cat([l_neg, l_neg_4], dim=1)
+                
+            if self.use_type5:
+                h5 = self.hard_negatives_grad(q, idxs_hard)
+                l_neg_5 = torch.einsum("nc,nkc->nk", [q, h5])
+                l_neg = torch.cat([l_neg, l_neg_5], dim=1)
+
+            if self.use_type6:
+                h6 = self.hard_negatives_adversarial(q, idxs_hard)
+                l_neg_6 = torch.einsum("nc,nkc->nk", [q, h6])
+                l_neg = torch.cat([l_neg, l_neg_6], dim=1)
 
         # logits: Nx(1+K)
         logits = torch.cat([l_pos, l_neg], dim=1)

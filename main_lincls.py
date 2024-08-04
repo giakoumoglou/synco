@@ -1,8 +1,10 @@
-# Copyright (C) 2024. All rights reserved.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
+#!/usr/bin/env python
+
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+
+# This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
+
 
 import argparse
 import urllib

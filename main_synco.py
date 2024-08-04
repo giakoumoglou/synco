@@ -15,6 +15,8 @@ import shutil
 import time
 import warnings
 
+import synco.builder
+import synco.loader
 import torch
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
@@ -27,9 +29,6 @@ import torch.utils.data.distributed
 import torchvision.datasets as datasets
 import torchvision.models as models
 import torchvision.transforms as transforms
-
-import synco.builder
-import synco.loader
 
 
 model_names = sorted(name for name in models.__dict__ if name.islower() and not name.startswith("__") and callable(models.__dict__[name]))
@@ -44,7 +43,7 @@ parser.add_argument("-b", "--batch-size", default=256, type=int, metavar="N", he
 parser.add_argument("--lr", "--learning-rate",  default=0.03,  type=float, metavar="LR",  help="initial learning rate",  dest="lr",)
 parser.add_argument("--schedule", default=[120, 160], nargs="*", type=int, help="learning rate schedule (when to drop lr by 10x)",)
 parser.add_argument("--momentum", default=0.9, type=float, metavar="M", help="momentum of SGD solver")
-parser.add_argument("--wd", "--weight-decay", default=1e-4, type=float, metavar="W", help="weight decay (default: 1e-4)", dest="weight_decay",)
+parser.add_argument( "--wd", "--weight-decay", default=1e-4, type=float, metavar="W", help="weight decay (default: 1e-4)", dest="weight_decay",)
 parser.add_argument("-p", "--print-freq", default=10, type=int, metavar="N", help="print frequency (default: 10)",)
 parser.add_argument("--resume", default="", type=str, metavar="PATH", help="path to latest checkpoint (default: none)",)
 parser.add_argument("--world-size", default=-1, type=int, help="number of nodes for distributed training",)
@@ -78,9 +77,7 @@ parser.add_argument("--n6", default=64, type=int, help="number of hard negatives
 parser.add_argument("--sigma", default=0.1, type=float, help="sigma parameter for gradient-based hard negatives") 
 parser.add_argument("--delta", default=0.01, type=float, help="delta parameter for noise injection hard negatives") 
 parser.add_argument("--eta", default=0.01, type=float, help="epsilon parameter for adversarial hard negatives") 
-
-# options for synco+
-parser.add_argument("--plus", action="store_true", help="use SynCo+: extra prediction head and BYOL augmentation") 
+parser.add_argument("--warmup-epochs", default=10, type=int, help="number of warmup epochs")
 
 
 def main():
@@ -149,7 +146,6 @@ def main_worker(gpu, ngpus_per_node, args):
             world_size=args.world_size,
             rank=args.rank,
         )
-        
     # create model
     print("=> creating model '{}'".format(args.arch))
     model = synco.builder.SynCo(
@@ -169,7 +165,7 @@ def main_worker(gpu, ngpus_per_node, args):
         args.sigma, 
         args.delta, 
         args.eta,
-        args.plus,
+        args.warmup_epochs,
     )
     print(model)
 
@@ -201,7 +197,6 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         # AllGather implementation (batch shuffle, queue update, etc.) in
         # this code only supports DistributedDataParallel.
-        model = torch.nn.DataParallel(model).cuda()
         raise NotImplementedError("Only DistributedDataParallel is supported.")
 
     # define loss function (criterion) and optimizer
@@ -227,7 +222,11 @@ def main_worker(gpu, ngpus_per_node, args):
             args.start_epoch = checkpoint["epoch"]
             model.load_state_dict(checkpoint["state_dict"])
             optimizer.load_state_dict(checkpoint["optimizer"])
-            print("=> loaded checkpoint '{}' (epoch {})".format(args.resume, checkpoint["epoch"]))
+            print(
+                "=> loaded checkpoint '{}' (epoch {})".format(
+                    args.resume, checkpoint["epoch"]
+                )
+            )
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
 
@@ -237,7 +236,7 @@ def main_worker(gpu, ngpus_per_node, args):
     traindir = os.path.join(args.data, "train")
     normalize = transforms.Normalize( mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     
-    if not args.aug_plus and not args.plus:
+    if not args.aug_plus:
         # MoCo v1's aug: the same as InstDisc https://arxiv.org/abs/1805.01978
         print('using MoCo v1 transform: same as InstDisc')
         transform = [
@@ -262,35 +261,7 @@ def main_worker(gpu, ngpus_per_node, args):
             transforms.ToTensor(),
             normalize,
         ]
-        augmentation = synco.loader.TwoCropsTransform(transforms.Compose(transform))
-        
-    if args.plus:
-        # SynCo+'s aug: similar to BYOL https://arxiv.org/abs/2006.07733
-        print('using SynCo+ transform: same as BYOL')
-        transform1 = [
-                transforms.RandomResizedCrop(224, scale=(0.08, 1.)),
-                transforms.RandomApply([transforms.ColorJitter(0.4, 0.4, 0.2, 0.1)], p=0.8),
-                transforms.RandomGrayscale(p=0.2),
-                transforms.RandomApply([synco.loader.GaussianBlur([.1, 2.])], p=1.0),
-                transforms.RandomApply([synco.loader.Solarization()], p=0.0),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                normalize,
-            ]
-            
-        transform2 = [
-                transforms.RandomResizedCrop(224, scale=(0.08, 1.)), 
-                transforms.RandomApply([transforms.ColorJitter(0.4, 0.4, 0.2, 0.1)], p=0.8), 
-                transforms.RandomGrayscale(p=0.2), 
-                transforms.RandomApply([synco.loader.GaussianBlur([.1, 2.])], p=0.1), 
-                transforms.RandomApply([synco.loader.Solarization()], p=0.2),
-                transforms.RandomHorizontalFlip(), 
-                transforms.ToTensor(),
-                normalize,
-            ]
-        augmentation = synco.loader.TwoCropsTransform(transforms.Compose(transform1),
-                                                      transforms.Compose(transform2))
-        
+        augmentation = synco.loader.TwoCropsTransform(transforms.Compose(transform))    
 
     train_dataset = datasets.ImageFolder(traindir, augmentation)
 
@@ -358,7 +329,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
             images[1] = images[1].cuda(args.gpu, non_blocking=True)
 
         # compute output
-        output, target = model(im_q=images[0], im_k=images[1])
+        output, target = model(im_q=images[0], im_k=images[1], epoch=epoch)
         loss = criterion(output, target)
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
@@ -391,6 +362,7 @@ def save_checkpoint(state, is_best, filename="checkpoint.pth.tar", path='./'):
 
 class AverageMeter:
     """Computes and stores the average and current value"""
+
     def __init__(self, name, fmt=":f"):
         self.name = name
         self.fmt = fmt
