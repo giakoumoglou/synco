@@ -238,7 +238,6 @@ def main_worker(gpu, ngpus_per_node, args):
     
     if not args.aug_plus:
         # MoCo v1's aug: the same as InstDisc https://arxiv.org/abs/1805.01978
-        print('using MoCo v1 transform: same as InstDisc')
         transform = [
         transforms.RandomResizedCrop(224, scale=(0.2, 1.0)),
             transforms.RandomGrayscale(p=0.2),
@@ -251,7 +250,6 @@ def main_worker(gpu, ngpus_per_node, args):
     
     if args.aug_plus:
         # MoCo v2's aug: similar to SimCLR https://arxiv.org/abs/2002.05709
-        print('using MoCo v2 transform: same as SimCLR')
         transform = [
             transforms.RandomResizedCrop(224, scale=(0.2, 1.0)),
             transforms.RandomApply([transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)], p=0.8),
