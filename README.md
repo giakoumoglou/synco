@@ -56,6 +56,35 @@ python main_lincls.py \
 
 See [./detection](detection).
 
+### Models
+
+Our pre-trained ResNet-50 models can be downloaded as follows:
+
+<table>
+<tbody>
+<!-- START TABLE -->
+<!-- TABLE HEADER -->
+<th valign="bottom"></th>
+<th valign="bottom">epochs</th>
+<th valign="bottom">top-1 acc.</th>
+<th valign="bottom">model</th>
+<!-- TABLE BODY -->
+<tr>
+<td align="left"><a href="https://arxiv.org/abs/XXXX.XXXXX">SynCo</a></td>
+<td align="center">200</td>
+<td align="center">68.1</td>
+<td align="center"><a href="https://dl.fbaipublicfiles.com/moco/moco_checkpoints/moco_v1_200ep/moco_v1_200ep_pretrain.pth.tar">download</a></td>
+</tr>
+<tr>
+<td align="left"><a href="https://arxiv.org/abs/XXXX.XXXXX">SynCo</a></td>
+<td align="center">800</td>
+<td align="center">72.1</td>
+<td align="center"><a href="https://dl.fbaipublicfiles.com/moco/moco_checkpoints/moco_v2_200ep/moco_v2_200ep_pretrain.pth.tar">download</a></td>
+</tr>
+</tbody>
+</table>
+
+
 ### License
 
 This project is under the CC-BY-NC 4.0 license. See [LICENSE](LICENSE) for details.
