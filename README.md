@@ -85,10 +85,22 @@ Our pre-trained ResNet-50 models can be downloaded as follows:
 <th valign="bottom">model</th>
 <!-- TABLE BODY -->
 <tr>
+<td align="left"><a href="https://arxiv.org/abs/2003.04297">MoCo v2</a></td>
+<td align="center">200</td>
+<td align="center">67.7</td>
+<td align="center"><a href="https://dl.fbaipublicfiles.com/moco/moco_checkpoints/moco_v2_200ep/moco_v2_200ep_pretrain.pth.tar">download</a></td>
+</tr>
+<tr>
+<tr>
 <td align="left"><a href="https://arxiv.org/abs/XXXX.XXXXX">SynCo</a></td>
 <td align="center">200</td>
 <td align="center">68.1</td>
 <td align="center"><a href="https://dl.fbaipublicfiles.com/moco/moco_checkpoints/moco_v1_200ep/moco_v1_200ep_pretrain.pth.tar">download</a></td>
+</tr>
+<td align="left"><a href="https://arxiv.org/abs/2003.04297">MoCo v2</a></td>
+<td align="center">800</td>
+<td align="center">71.1</td>
+<td align="center"><a href="https://dl.fbaipublicfiles.com/moco/moco_checkpoints/moco_v2_800ep/moco_v2_800ep_pretrain.pth.tar">download</a></td>
 </tr>
 <tr>
 <td align="left"><a href="https://arxiv.org/abs/XXXX.XXXXX">SynCo</a></td>
