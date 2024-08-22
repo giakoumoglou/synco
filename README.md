@@ -52,6 +52,20 @@ python main_lincls.py \
   [your imagenet-folder with train and val folders]
 ```
 
+### Semi-supervised Learning
+
+To train a supervised linear classifier on features/weights (either frozen or fine-tuned) using a pre-trained model on an 8-GPU machine with a subset of the ImageNet training set, run:
+```
+python main_lincls.py \
+  -a resnet50 \
+  --lr 0.005 \
+  --batch-size 256 \
+  --pretrained [your checkpoint path]/checkpoint_0199.pth.tar \
+  --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 \
+  --train-percent 1 --weights finetune \
+  [your imagenet-folder with train and val folders]
+```
+
 ### Transferring to Object Detection
 
 See [./detection](detection).
