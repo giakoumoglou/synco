@@ -52,6 +52,10 @@ python main_lincls.py \
   [your imagenet-folder with train and val folders]
 ```
 
+### Transferring to Object Detection
+
+See [./detection](detection).
+
 ### License
 
 This project is under the CC-BY-NC 4.0 license. See [LICENSE](LICENSE) for details.
