@@ -55,7 +55,7 @@ python main_lincls.py \
 
 ### Semi-supervised Learning
 
-To train a supervised linear classifier on features/weights (either frozen or fine-tuned) using a pre-trained model on an 8-GPU machine with a subset of the ImageNet training set, run:
+To fine-tune the model end-to-end, including training a linear classifier on features/weights using a pre-trained model on an 8-GPU machine with a subset of the ImageNet training set, run:
 ```
 python main_lincls.py \
   -a resnet50 \
