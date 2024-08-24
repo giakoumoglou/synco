@@ -44,7 +44,7 @@ parser.add_argument("-b", "--batch-size", default=256, type=int, metavar="N", he
 parser.add_argument("--lr", "--learning-rate",  default=0.03,  type=float, metavar="LR",  help="initial learning rate",  dest="lr",)
 parser.add_argument("--schedule", default=[120, 160], nargs="*", type=int, help="learning rate schedule (when to drop lr by 10x)",)
 parser.add_argument("--momentum", default=0.9, type=float, metavar="M", help="momentum of SGD solver")
-parser.add_argument( "--wd", "--weight-decay", default=1e-4, type=float, metavar="W", help="weight decay (default: 1e-4)", dest="weight_decay",)
+parser.add_argument("--wd", "--weight-decay", default=1e-4, type=float, metavar="W", help="weight decay (default: 1e-4)", dest="weight_decay",)
 parser.add_argument("-p", "--print-freq", default=10, type=int, metavar="N", help="print frequency (default: 10)",)
 parser.add_argument("--resume", default="", type=str, metavar="PATH", help="path to latest checkpoint (default: none)",)
 parser.add_argument("--world-size", default=-1, type=int, help="number of nodes for distributed training",)
@@ -78,7 +78,7 @@ parser.add_argument("--n6", default=64, type=int, help="number of hard negatives
 parser.add_argument("--sigma", default=0.1, type=float, help="sigma parameter for gradient-based hard negatives") 
 parser.add_argument("--delta", default=0.01, type=float, help="delta parameter for noise injection hard negatives") 
 parser.add_argument("--eta", default=0.01, type=float, help="epsilon parameter for adversarial hard negatives") 
-parser.add_argument("--warmup-epochs", default=10, type=int, help="number of warmup epochs")
+parser.add_argument("--warmup-epochs", default=10, type=int, help="number of warmup epochs where no synthetic negatives are generated")
 
 
 def main():
