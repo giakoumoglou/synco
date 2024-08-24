@@ -88,15 +88,17 @@ Our pre-trained ResNet-50 models can be downloaded as follows:
 <td align="left"><a href="https://arxiv.org/abs/XXXX.XXXXX">SynCo</a></td>
 <td align="center">200</td>
 <td align="center">68.1</td>
-<td align="center"><a href="[https://dl.fbaipublicfiles.com/moco/moco_checkpoints/moco_v1_200ep/moco_v1_200ep_pretrain.pth.tar](https://drive.google.com/file/d/1sdc9Q5zIOdyEEL47pq9aJrCkrN6RVPOe/view?usp=drive_link)">download</a></td>
+<td align="center"><a href="https://drive.google.com/file/d/1sdc9Q5zIOdyEEL47pq9aJrCkrN6RVPOe/view?usp=drive_link">download</a></td>
 </tr>
+<tr>
 <td align="left"><a href="https://arxiv.org/abs/XXXX.XXXXX">SynCo</a></td>
 <td align="center">800</td>
 <td align="center">72.1</td>
-<td align="center"><a href="[https://dl.fbaipublicfiles.com/moco/moco_checkpoints/moco_v2_200ep/moco_v2_200ep_pretrain.pth.tar](https://drive.google.com/file/d/1ZOoUmB6slrQxGRA9AdaCeIN3J-r6NaWI/view?usp=drive_link)">download</a></td>
+<td align="center"><a href="https://drive.google.com/file/d/1ZOoUmB6slrQxGRA9AdaCeIN3J-r6NaWI/view?usp=drive_link">download</a></td>
 </tr>
 </tbody>
 </table>
+
 
 
 ### License
