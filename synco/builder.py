@@ -14,7 +14,7 @@ class SynCo(nn.Module):
     """
     def __init__(self, base_encoder, dim=128, K=65536, m=0.999, T=0.07, mlp=True,
                  n_hard=1024, n1=256, n2=256, n3=256, n4=64, n5=64, n6=64,
-                 sigma=0.1, delta=0.01, eta=0.01,
+                 sigma=0.01, delta=0.01, eta=0.01,
                  warmup_epochs=10,
                  ):
         """
@@ -31,7 +31,7 @@ class SynCo(nn.Module):
         n4 (int): Number of type 4 hard negatives (noise injection) (default: 64)
         n5 (int): Number of type 5 hard negatives (gradient-based) (default: 64)
         n6 (int): Number of type 6 hard negatives (adversarial) (default: 64)
-        sigma (float): Noise level for type 4 hard negatives (default: 0.1)
+        sigma (float): Noise level for type 4 hard negatives (default: 0.01)
         delta (float): Perturbation strength for type 5 hard negatives (default: 0.01)
         eta (float): Step size for type 6 hard negatives (default: 0.01)
         warmup_epochs (int): Number of warmup epochs without hard negatives (default: 10)
