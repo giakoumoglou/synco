@@ -60,7 +60,7 @@ To fine-tune the model end-to-end, including training a linear classifier on fea
 python main_semisup.py \
   -a resnet50 \
   --lr-backbone 0.005 --lr-classifier 0.5 \
-  -train-percent 1 --weights finetune \
+  --train-percent 1 --weights finetune \
   --batch-size 256 \
   --pretrained [your checkpoint path]/checkpoint_0199.pth.tar \
   --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 \
