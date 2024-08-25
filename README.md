@@ -53,6 +53,9 @@ python main_lincls.py \
   [your imagenet-folder with train and val folders]
 ```
 
+This script uses all the default hyper-parameters as described in the [MoCo v2 paper](https://arxiv.org/abs/1911.05722).
+
+
 ### Semi-supervised Learning
 
 To fine-tune the model end-to-end, including training a linear classifier on features/weights using a pre-trained model on an 8-GPU machine with a subset of the ImageNet training set, run:
@@ -66,6 +69,8 @@ python main_semisup.py \
   --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 \
   [your imagenet-folder with train and val folders]
 ```
+
+This script uses all the default hyper-parameters as described in the [Barlow Twins paper](https://arxiv.org/abs/2103.03230).
 
 ### Transferring to Object Detection
 
