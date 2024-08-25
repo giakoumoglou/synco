@@ -14,7 +14,7 @@ This is a PyTorch implementation of the [SynCo paper](https://arxiv.org/abs/XXXX
 
 Install PyTorch and ImageNet dataset following the [official PyTorch ImageNet training code](https://github.com/pytorch/examples/tree/master/imagenet).
 
-This repo is based on [MoCo v2 code](https://github.com/facebookresearch/moco), with some adjustments from [Barlow Twins code](https://github.com/facebookresearch/barlowtwins):
+This repo is based on [MoCo v2](https://github.com/facebookresearch/moco) and [Barlow Twins](https://github.com/facebookresearch/barlowtwins) code:
 ```
 diff main_synco.py <(curl https://raw.githubusercontent.com/facebookresearch/moco/main_moco.py)
 diff main_lincls.py <(curl https://raw.githubusercontent.com/facebookresearch/moco/main_lincls.py)
