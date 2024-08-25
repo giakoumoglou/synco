@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2024. All rights reserved.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+
+# This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
 
@@ -34,15 +33,17 @@ model_names = sorted(name for name in models.__dict__ if name.islower() and not 
 
 parser = argparse.ArgumentParser(description="PyTorch ImageNet Training")
 parser.add_argument("data", metavar="DIR", help="path to dataset")
+parser.add_argument("--train-percent", default=100, type=int, choices=(100, 10, 1), help="size of traing set in percent (imagenet only)")
+parser.add_argument("--weights", default="freeze", type=str, choices=("finetune", "freeze"), help="finetune or freeze resnet weights")
 parser.add_argument("-a", "--arch", metavar="ARCH", default="resnet50", choices=model_names, help="model architecture: " + " | ".join(model_names) + " (default: resnet50)",)
 parser.add_argument("-j", "--workers", default=32, type=int, metavar="N", help="number of data loading workers (default: 32)",)
 parser.add_argument("--epochs", default=100, type=int, metavar="N", help="number of total epochs to run")
 parser.add_argument("--start-epoch", default=0, type=int, metavar="N", help="manual epoch number (useful on restarts)",)
 parser.add_argument("-b", "--batch-size", default=256, type=int, metavar="N", help="mini-batch size (default: 256), this is the total batch size of all GPUs on the current node when using Data Parallel or Distributed Data Parallel",)
-parser.add_argument("--lr", "--learning-rate",  default=0.03,  type=float, metavar="LR",  help="initial learning rate",  dest="lr",)
-parser.add_argument("--schedule", default=[60, 80], nargs="*", type=int, help="learning rate schedule (when to drop lr by a ratio)",)
+parser.add_argument('--lr-backbone', default=0.0, type=float, metavar='LR', help='backbone base learning rate')
+parser.add_argument('--lr-classifier', default=0.3, type=float, metavar='LR',help='classifier base learning rate')
 parser.add_argument("--momentum", default=0.9, type=float, metavar="M", help="momentum")
-parser.add_argument("--wd", "--weight-decay", default=0.0, type=float, metavar="W", help="weight decay (default: 0.)",  dest="weight_decay",)
+parser.add_argument("--wd", "--weight-decay", default=1e-6, type=float, metavar="W", help="weight decay (default: 0.)",  dest="weight_decay",)
 parser.add_argument("-p", "--print-freq", default=10, type=int, metavar="N", help="print frequency (default: 10)",)
 parser.add_argument("--resume", default="",  type=str, metavar="PATH", help="path to latest checkpoint (default: none)",)
 parser.add_argument("-e", "--evaluate", dest="evaluate", action="store_true", help="evaluate model on validation set",)
@@ -62,6 +63,9 @@ best_acc1 = 0
 def main():
     args = parser.parse_args()
     args.save_dir = args.pretrained.split('checkpoint')[0]
+    
+    if args.train_percent in {1, 10}:
+        args.train_files = urllib.request.urlopen(f"https://raw.githubusercontent.com/google-research/simclr/master/imagenet_subsets/{args.train_percent}percent.txt").readlines()
 
     if args.seed is not None:
         random.seed(args.seed)
@@ -130,11 +134,7 @@ def main_worker(gpu, ngpus_per_node, args):
     # create model
     print("=> creating model '{}'".format(args.arch))
     model = models.__dict__[args.arch]()
-
-    # init the fc layer
-    model.fc.weight.data.normal_(mean=0.0, std=0.01)
-    model.fc.bias.data.zero_()
-
+    
     # load from pre-trained, before DistributedDataParallel constructor
     if args.pretrained:
         if os.path.isfile(args.pretrained):
@@ -145,9 +145,7 @@ def main_worker(gpu, ngpus_per_node, args):
             state_dict = checkpoint["state_dict"]
             for k in list(state_dict.keys()):
                 # retain only encoder_q up to before the embedding layer
-                if k.startswith("module.encoder_q") and not k.startswith(
-                    "module.encoder_q.fc"
-                ):
+                if k.startswith("module.encoder_q") and not k.startswith("module.encoder_q.fc"):
                     # remove prefix
                     state_dict[k[len("module.encoder_q.") :]] = state_dict[k]
                 # delete renamed or unused k
@@ -160,6 +158,21 @@ def main_worker(gpu, ngpus_per_node, args):
             print("=> loaded pre-trained model '{}'".format(args.pretrained))
         else:
             print("=> no checkpoint found at '{}'".format(args.pretrained))
+            
+    # init the fc layer
+    model.fc.weight.data.normal_(mean=0.0, std=0.01)
+    model.fc.bias.data.zero_()
+    
+    # finetune or freeze all layers
+    if args.weights == 'freeze':
+        model.requires_grad_(False)
+        model.fc.requires_grad_(True)
+    classifier_parameters, model_parameters = [], []
+    for name, param in model.named_parameters():
+        if name in {'fc.weight', 'fc.bias'}:
+            classifier_parameters.append(param)
+        else:
+            model_parameters.append(param)   
 
     if args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
@@ -196,11 +209,11 @@ def main_worker(gpu, ngpus_per_node, args):
     criterion = nn.CrossEntropyLoss().cuda(args.gpu)
 
     # optimize only the linear classifier
-    parameters = list(filter(lambda p: p.requires_grad, model.parameters()))
-    assert len(parameters) == 2  # fc.weight, fc.bias
-    optimizer = torch.optim.SGD(
-        parameters, args.lr, momentum=args.momentum, weight_decay=args.weight_decay
-    )
+    param_groups = [dict(params=classifier_parameters, lr=args.lr_classifier)]
+    if args.weights == 'finetune':
+        param_groups.append(dict(params=model_parameters, lr=args.lr_backbone))
+    optimizer = optim.SGD(param_groups, 0, momentum=args.momentum, weight_decay=args.weight_decay)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs)
 
     # optionally resume from a checkpoint
     if args.resume:
@@ -219,6 +232,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 best_acc1 = best_acc1.to(args.gpu)
             model.load_state_dict(checkpoint["state_dict"])
             optimizer.load_state_dict(checkpoint["optimizer"])
+            scheduler.load_state_dict(checkpoint['scheduler'])
             print( "=> loaded checkpoint '{}' (epoch {})".format(args.resume, checkpoint["epoch"]))
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
@@ -244,6 +258,15 @@ def main_worker(gpu, ngpus_per_node, args):
         ),
     )
     
+    if args.train_percent in {1, 10}:
+        train_dataset.samples = []
+        for fname in args.train_files:
+            fname = fname.decode().strip()
+            cls = fname.split("_")[0]
+            train_dataset.samples.append(
+                (os.path.join(traindir, cls, fname), train_dataset.class_to_idx[cls])
+            )
+
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
     else:
@@ -282,21 +305,12 @@ def main_worker(gpu, ngpus_per_node, args):
         validate(val_loader, model, criterion, args)
         return
 
-    for epoch in range(args.start_epoch, args.epochs):
-        # train
-        if args.weights == "finetune":
-            model.train()
-        elif args.weights == "freeze":
-            model.eval()
-        else:
-            assert False
-    
+    for epoch in range(args.start_epoch, args.epochs):   
         if args.distributed:
             train_sampler.set_epoch(epoch)
-        adjust_learning_rate(optimizer, epoch, args)
 
         # train for one epoch
-        train(train_loader, model, criterion, optimizer, epoch, args)
+        train(train_loader, model, criterion, optimizer, scheduler, epoch, args)
 
         # evaluate on validation set
         acc1 = validate(val_loader, model, criterion, args)
@@ -315,15 +329,16 @@ def main_worker(gpu, ngpus_per_node, args):
                     "state_dict": model.state_dict(),
                     "best_acc1": best_acc1,
                     "optimizer": optimizer.state_dict(),
+                    "scheduler": scheduler.state_dict(),
                 },
                 is_best,
                 path=args.save_dir,
             )
-            if epoch == args.start_epoch:
+            if epoch == args.start_epoch and args.weights == "freeze":
                 sanity_check(model.state_dict(), args.pretrained)
 
 
-def train(train_loader, model, criterion, optimizer, epoch, args):
+def train(train_loader, model, criterion, optimizer, scheduler, epoch, args):        
     batch_time = AverageMeter("Time", ":6.3f")
     data_time = AverageMeter("Data", ":6.3f")
     losses = AverageMeter("Loss", ":.4e")
@@ -334,15 +349,14 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         [batch_time, data_time, losses, top1, top5],
         prefix="Epoch: [{}]".format(epoch),
     )
-
-    """
-    Switch to eval mode:
-    Under the protocol of linear classification on frozen features/models,
-    it is not legitimate to change any part of the pre-trained model.
-    BatchNorm in train mode may revise running mean/std (even if it receives
-    no gradient), which are part of the model parameters too.
-    """
-    model.eval()
+    
+    # train
+    if args.weights == "finetune":
+        model.train()
+    elif args.weights == "freeze":
+        model.eval()
+    else:
+        assert False
 
     end = time.time()
     for i, (images, target) in enumerate(train_loader):
@@ -374,6 +388,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 
         if i % args.print_freq == 0:
             progress.display(i)
+            
+    scheduler.step()
 
 
 def validate(val_loader, model, criterion, args):
@@ -428,21 +444,22 @@ def sanity_check(state_dict, pretrained_weights):
     Linear classifier should not change any weights other than the linear layer.
     This sanity check asserts nothing wrong happens (e.g., BN stats updated).
     """
-    print("=> loading '{}' for sanity check".format(pretrained_weights))
-    checkpoint = torch.load(pretrained_weights, map_location="cpu")
-    state_dict_pre = checkpoint["state_dict"]
+    if args.weights == 'freeze':
+        print("=> loading '{}' for sanity check".format(pretrained_weights))
+        checkpoint = torch.load(pretrained_weights, map_location="cpu")
+        state_dict_pre = checkpoint["state_dict"]
 
-    for k in list(state_dict.keys()):
-        # only ignore fc layer
-        if "fc.weight" in k or "fc.bias" in k:
-            continue
+        for k in list(state_dict.keys()):
+            # only ignore fc layer
+            if "fc.weight" in k or "fc.bias" in k:
+                continue
 
-        # name in pretrained model
-        k_pre = ("module.encoder_q." + k[len("module.") :] if k.startswith("module.") else "module.encoder_q." + k)
+            # name in pretrained model
+            k_pre = ("module.encoder_q." + k[len("module.") :] if k.startswith("module.") else "module.encoder_q." + k)
 
-        assert (state_dict[k].cpu() == state_dict_pre[k_pre]).all(), "{} is changed in linear classifier training.".format(k)
+            assert (state_dict[k].cpu() == state_dict_pre[k_pre]).all(), "{} is changed in linear classifier training.".format(k)
 
-    print("=> sanity check passed.")
+        print("=> sanity check passed.")
 
 
 class AverageMeter:
@@ -485,15 +502,6 @@ class ProgressMeter:
         num_digits = len(str(num_batches // 1))
         fmt = "{:" + str(num_digits) + "d}"
         return "[" + fmt + "/" + fmt.format(num_batches) + "]"
-
-
-def adjust_learning_rate(optimizer, epoch, args):
-    """Decay the learning rate based on schedule"""
-    lr = args.lr
-    for milestone in args.schedule:
-        lr *= 0.1 if epoch >= milestone else 1.0
-    for param_group in optimizer.param_groups:
-        param_group["lr"] = lr
 
 
 def accuracy(output, target, topk=(1,)):
