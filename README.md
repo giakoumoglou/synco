@@ -18,7 +18,7 @@ This repo is based on [MoCo v2 code](https://github.com/facebookresearch/moco), 
 ```
 diff main_synco.py <(curl https://raw.githubusercontent.com/facebookresearch/moco/main_moco.py)
 diff main_lincls.py <(curl https://raw.githubusercontent.com/facebookresearch/moco/main_lincls.py)
-diff main_lincls.py <(curl https://raw.githubusercontent.com/facebookresearch/barlowtwins/evaluate.py)
+diff main_semisup.py <(curl https://raw.githubusercontent.com/facebookresearch/barlowtwins/evaluate.py)
 ```
 
 
@@ -57,13 +57,13 @@ python main_lincls.py \
 
 To fine-tune the model end-to-end, including training a linear classifier on features/weights using a pre-trained model on an 8-GPU machine with a subset of the ImageNet training set, run:
 ```
-python main_lincls.py \
+python main_semisup.py \
   -a resnet50 \
-  --lr 0.005 \
+  --lr-backbone 0.005 --lr-classifier 0.5 \
+  -train-percent 1 --weights finetune \
   --batch-size 256 \
   --pretrained [your checkpoint path]/checkpoint_0199.pth.tar \
   --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 \
-  --train-percent 1 --weights finetune \
   [your imagenet-folder with train and val folders]
 ```
 
