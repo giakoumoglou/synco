@@ -132,6 +132,7 @@ def main_worker(gpu, ngpus_per_node, args):
             world_size=args.world_size,
             rank=args.rank,
         )
+        
     # create model
     print("=> creating model '{}'".format(args.arch))
     model = models.__dict__[args.arch]()
@@ -240,7 +241,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     cudnn.benchmark = True
 
-    # Data loading code
+    # data loading code
     traindir = os.path.join(args.data, "train")
     valdir = os.path.join(args.data, "val")
     normalize = transforms.Normalize(
@@ -336,7 +337,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 path=args.save_dir,
             )
             if epoch == args.start_epoch and args.weights == "freeze":
-                sanity_check(model.state_dict(), args.pretrained, args)
+                sanity_check(model.state_dict(), args.pretrained)
 
 
 def train(train_loader, model, criterion, optimizer, scheduler, epoch, args):        
@@ -440,27 +441,26 @@ def save_checkpoint(state, is_best, filename="checkpoint.pth.tar", path='./'):
         shutil.copyfile(full_filename, os.path.join(path, "model_best.pth.tar"))
 
 
-def sanity_check(state_dict, pretrained_weights, args):
+def sanity_check(state_dict, pretrained_weights):
     """
     Linear classifier should not change any weights other than the linear layer.
     This sanity check asserts nothing wrong happens (e.g., BN stats updated).
     """
-    if args.weights == 'freeze':
-        print("=> loading '{}' for sanity check".format(pretrained_weights))
-        checkpoint = torch.load(pretrained_weights, map_location="cpu")
-        state_dict_pre = checkpoint["state_dict"]
+    print("=> loading '{}' for sanity check".format(pretrained_weights))
+    checkpoint = torch.load(pretrained_weights, map_location="cpu")
+    state_dict_pre = checkpoint["state_dict"]
 
-        for k in list(state_dict.keys()):
-            # only ignore fc layer
-            if "fc.weight" in k or "fc.bias" in k:
-                continue
+    for k in list(state_dict.keys()):
+        # only ignore fc layer
+        if "fc.weight" in k or "fc.bias" in k:
+            continue
 
-            # name in pretrained model
-            k_pre = ("module.encoder_q." + k[len("module.") :] if k.startswith("module.") else "module.encoder_q." + k)
+        # name in pretrained model
+        k_pre = ("module.encoder_q." + k[len("module.") :] if k.startswith("module.") else "module.encoder_q." + k)
 
-            assert (state_dict[k].cpu() == state_dict_pre[k_pre]).all(), "{} is changed in linear classifier training.".format(k)
+        assert (state_dict[k].cpu() == state_dict_pre[k_pre]).all(), "{} is changed in linear classifier training.".format(k)
 
-        print("=> sanity check passed.")
+    print("=> sanity check passed.")
 
 
 class AverageMeter:
