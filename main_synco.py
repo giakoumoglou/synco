@@ -218,7 +218,7 @@ def main_worker(gpu, ngpus_per_node, args):
             if args.gpu is None:
                 checkpoint = torch.load(args.resume)
             else:
-                # map model to be loaded to specified single gpu.
+                # map model to be loaded to specified single gpu
                 loc = "cuda:{}".format(args.gpu)
                 checkpoint = torch.load(args.resume, map_location=loc)
             args.start_epoch = checkpoint["epoch"]
