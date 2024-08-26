@@ -36,27 +36,27 @@ parser = argparse.ArgumentParser(description="PyTorch ImageNet Training")
 parser.add_argument("data", metavar="DIR", help="path to dataset")
 parser.add_argument("--train-percent", default=100, type=int, choices=(100, 10, 1), help="size of traing set in percent (imagenet only)")
 parser.add_argument("--weights", default="freeze", type=str, choices=("finetune", "freeze"), help="finetune or freeze resnet weights")
-parser.add_argument("-a", "--arch", metavar="ARCH", default="resnet50", choices=model_names, help="model architecture: " + " | ".join(model_names) + " (default: resnet50)",)
-parser.add_argument("-j", "--workers", default=32, type=int, metavar="N", help="number of data loading workers (default: 32)",)
+parser.add_argument("-a", "--arch", metavar="ARCH", default="resnet50", choices=model_names, help="model architecture: " + " | ".join(model_names) + " (default: resnet50)")
+parser.add_argument("-j", "--workers", default=32, type=int, metavar="N", help="number of data loading workers (default: 32)")
 parser.add_argument("--epochs", default=100, type=int, metavar="N", help="number of total epochs to run")
-parser.add_argument("--start-epoch", default=0, type=int, metavar="N", help="manual epoch number (useful on restarts)",)
-parser.add_argument("-b", "--batch-size", default=256, type=int, metavar="N", help="mini-batch size (default: 256), this is the total batch size of all GPUs on the current node when using Data Parallel or Distributed Data Parallel",)
+parser.add_argument("--start-epoch", default=0, type=int, metavar="N", help="manual epoch number (useful on restarts)")
+parser.add_argument("-b", "--batch-size", default=256, type=int, metavar="N", help="mini-batch size (default: 256), this is the total batch size of all GPUs on the current node when using Data Parallel or Distributed Data Parallel")
 parser.add_argument('--lr-backbone', default=0.0, type=float, metavar='LR', help='backbone base learning rate')
 parser.add_argument('--lr-classifier', default=0.3, type=float, metavar='LR',help='classifier base learning rate')
 parser.add_argument("--momentum", default=0.9, type=float, metavar="M", help="momentum")
-parser.add_argument("--wd", "--weight-decay", default=1e-6, type=float, metavar="W", help="weight decay (default: 0.)",  dest="weight_decay",)
-parser.add_argument("-p", "--print-freq", default=10, type=int, metavar="N", help="print frequency (default: 10)",)
-parser.add_argument("--resume", default="",  type=str, metavar="PATH", help="path to latest checkpoint (default: none)",)
-parser.add_argument("-e", "--evaluate", dest="evaluate", action="store_true", help="evaluate model on validation set",)
-parser.add_argument("--world-size", default=-1, type=int, help="number of nodes for distributed training",)
+parser.add_argument("--wd", "--weight-decay", default=1e-6, type=float, metavar="W", help="weight decay (default: 0.0)",  dest="weight_decay")
+parser.add_argument("-p", "--print-freq", default=10, type=int, metavar="N", help="print frequency (default: 10)")
+parser.add_argument("--resume", default="",  type=str, metavar="PATH", help="path to latest checkpoint (default: none)")
+parser.add_argument("-e", "--evaluate", dest="evaluate", action="store_true", help="evaluate model on validation set")
+parser.add_argument("--world-size", default=-1, type=int, help="number of nodes for distributed training")
 parser.add_argument("--rank", default=-1, type=int, help="node rank for distributed training")
-parser.add_argument("--dist-url", default="tcp://224.66.41.62:23456", type=str, help="url used to set up distributed training",)
+parser.add_argument("--dist-url", default="tcp://224.66.41.62:23456", type=str, help="url used to set up distributed training")
 parser.add_argument("--dist-backend", default="nccl", type=str, help="distributed backend")
-parser.add_argument("--seed", default=None, type=int, help="seed for initializing training. ")
+parser.add_argument("--seed", default=None, type=int, help="seed for initializing training.")
 parser.add_argument("--gpu", default=None, type=int, help="GPU id to use.")
-parser.add_argument("--multiprocessing-distributed", action="store_true", help="Use multi-processing distributed training to launch N processes per node, which has N GPUs. This is the fastest way to use PyTorch for either single node or multi node data parallel training",)
+parser.add_argument("--multiprocessing-distributed", action="store_true", help="use multi-processing distributed training to launch N processes per node, which has N GPUs. This is the fastest way to use PyTorch for either single node or multi node data parallel training")
 
-parser.add_argument("--pretrained", default="", type=str, help="path to moco pretrained checkpoint")
+parser.add_argument("--pretrained", default="", type=str, help="path to pretrained checkpoint")
 
 best_acc1 = 0
 
@@ -336,7 +336,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 path=args.save_dir,
             )
             if epoch == args.start_epoch and args.weights == "freeze":
-                sanity_check(model.state_dict(), args.pretrained)
+                sanity_check(model.state_dict(), args.pretrained, args)
 
 
 def train(train_loader, model, criterion, optimizer, scheduler, epoch, args):        
@@ -440,7 +440,7 @@ def save_checkpoint(state, is_best, filename="checkpoint.pth.tar", path='./'):
         shutil.copyfile(full_filename, os.path.join(path, "model_best.pth.tar"))
 
 
-def sanity_check(state_dict, pretrained_weights):
+def sanity_check(state_dict, pretrained_weights, args):
     """
     Linear classifier should not change any weights other than the linear layer.
     This sanity check asserts nothing wrong happens (e.g., BN stats updated).
