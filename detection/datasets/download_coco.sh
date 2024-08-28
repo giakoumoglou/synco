@@ -1,7 +1,5 @@
 #!/bin/bash
 
-cd $PBS_O_WORKDIR
-
 mkdir coco
 cd coco
 
