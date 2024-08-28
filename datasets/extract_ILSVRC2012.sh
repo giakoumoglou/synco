@@ -1,7 +1,4 @@
 #!/bin/bash
-#PBS -lselect=1:ncpus=2:mem=8gb
-#PBS -lwalltime=48:00:00
-cd $PBS_O_WORKDIR
 #
 # script to extract ImageNet dataset
 # ILSVRC2012_img_train.tar (about 138 GB)
