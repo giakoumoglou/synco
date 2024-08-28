@@ -1,6 +1,5 @@
 #!/bin/bash
-#PBS -lselect=1:ncpus=2:mem=8gb
-#PBS -lwalltime=48:00:00
+
 cd $PBS_O_WORKDIR
 
 mkdir coco
