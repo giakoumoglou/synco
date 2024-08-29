@@ -433,12 +433,12 @@ def validate(val_loader, model, criterion, args):
     return top1.avg
 
 
-def save_checkpoint(state, is_best, filename="checkpoint.pth.tar", path='./'):
+def save_checkpoint(state, is_best, filename="checkpoint_semisup.pth.tar", path='./'):
     os.makedirs(path, exist_ok=True)
     full_filename = os.path.join(path, filename)
     torch.save(state, full_filename)
     if is_best:
-        shutil.copyfile(full_filename, os.path.join(path, "model_best.pth.tar"))
+        shutil.copyfile(full_filename, os.path.join(path, "model_best_semisup.pth.tar"))
 
 
 def sanity_check(state_dict, pretrained_weights):
