@@ -98,7 +98,7 @@ Our pre-trained ResNet-50 models can be downloaded as follows:
 <tr>
 <td align="left"><a href="https://arxiv.org/abs/XXXX.XXXXX">SynCo</a></td>
 <td align="center">800</td>
-<td align="center">72.1</td>
+<td align="center">70.6</td>
 <td align="center"><a href="https://drive.google.com/file/d/1ZOoUmB6slrQxGRA9AdaCeIN3J-r6NaWI/view?usp=drive_link">download</a></td>
 </tr>
 </tbody>
