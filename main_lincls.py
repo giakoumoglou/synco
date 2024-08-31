@@ -287,14 +287,6 @@ def main_worker(gpu, ngpus_per_node, args):
         return
 
     for epoch in range(args.start_epoch, args.epochs):
-        # train
-        if args.weights == "finetune":
-            model.train()
-        elif args.weights == "freeze":
-            model.eval()
-        else:
-            assert False
-    
         if args.distributed:
             train_sampler.set_epoch(epoch)
         adjust_learning_rate(optimizer, epoch, args)
