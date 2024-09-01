@@ -62,7 +62,7 @@ To fine-tune the model end-to-end, including training a linear classifier on fea
 ```
 python main_semisup.py \
   -a resnet50 \
-  --lr-backbone 0.005 --lr-classifier 0.5 \
+  --lr-backbone 0.005 --lr-classifier 0.005 \
   --train-percent 1 --weights finetune \
   --batch-size 256 \
   --pretrained [your checkpoint path]/checkpoint_0199.pth.tar \
@@ -70,7 +70,19 @@ python main_semisup.py \
   [your imagenet-folder with train and val folders]
 ```
 
-This script uses all the default hyper-parameters as described in the [Barlow Twins paper](https://arxiv.org/abs/2103.03230).
+We sweep over the learning rate `{0.01, 0.02, 0.05, 0.1, 0.005}` and the number of epochs `{30, 60}` to select the hyperparameters achieving the best performance on our local validation set to report test performance.
+
+```
+learning_rates=(0.01 0.02 0.05 0.1 0.005)
+
+for lr in "${learning_rates[@]}"; do
+    echo "========== LR: $lr, Percentage 1% ==========="
+    python main_semisup.py -a resnet50 --lr-backbone $lr --lr-classifier 0.5 --epochs 60 --train-percent 1 --weights finetune --batch-size 1024 --pretrained ./output/synco_r50_800ep/checkpoint_0799.pth.tar --dist-url 'tcp://localhost:17002' --multiprocessing-distributed --world-size 1 --rank 0 ../../datasets/imagenet/
+    
+    echo "========== LR: $lr, Percentage 10% ==========="
+    python main_semisup.py -a resnet50 --lr-backbone $lr --lr-classifier 0.5 --epochs 30 --train-percent 10 --weights finetune --batch-size 1024 --pretrained ./output/synco_r50_800ep/checkpoint_0799.pth.tar --dist-url 'tcp://localhost:17002' --multiprocessing-distributed --world-size 1 --rank 0 ../../datasets/imagenet/
+done
+```
 
 ### Transferring to Object Detection
 
