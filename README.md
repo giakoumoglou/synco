@@ -59,22 +59,19 @@ This script uses all the default hyper-parameters as described in the [MoCo v2 p
 <tbody>
 <!-- START TABLE -->
 <!-- TABLE HEADER -->
-<th valign="bottom"></th>
+<th valign="bottom">Model</th>
 <th valign="bottom">epochs</th>
 <th valign="bottom">top-1 acc.</th>
-<th valign="bottom">model</th>
 <!-- TABLE BODY -->
 <tr>
-<td align="left"><a href="https://arxiv.org/abs/XXXX.XXXXX">ResNet-50</a></td>
+<td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">68.1 ± 0.1</td>
-<td align="center"><a href="https://drive.google.com/file/d/1sdc9Q5zIOdyEEL47pq9aJrCkrN6RVPOe/view?usp=drive_link">download</a></td>
 </tr>
 <tr>
-<td align="left"><a href="https://arxiv.org/abs/XXXX.XXXXX">ResNet-50</a></td>
+<td align="left">ResNet-50</td>
 <td align="center">800</td>
-<td align="center">70.6 ± 0.0</td>
-<td align="center"><a href="https://drive.google.com/file/d/1ZOoUmB6slrQxGRA9AdaCeIN3J-r6NaWI/view?usp=drive_link">download</a></td>
+<td align="center">70.6 ± 0.2</td>
 </tr>
 </tbody>
 </table>
