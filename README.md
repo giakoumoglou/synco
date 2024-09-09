@@ -55,6 +55,8 @@ python main_lincls.py \
 
 This script uses all the default hyper-parameters as described in the [MoCo v2 paper](https://arxiv.org/abs/1911.05722).
 
+Linear classification results on ImageNet using this repo:
+
 <table>
 <tbody>
 <!-- START TABLE -->
