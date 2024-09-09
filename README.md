@@ -21,7 +21,6 @@ diff main_lincls.py <(curl https://raw.githubusercontent.com/facebookresearch/mo
 diff main_semisup.py <(curl https://raw.githubusercontent.com/facebookresearch/barlowtwins/evaluate.py)
 ```
 
-
 ### Unsupervised Training
 
 This implementation only supports **multi-gpu**, **DistributedDataParallel** training, which is faster and simpler; single-gpu or DataParallel training is not supported.
@@ -55,31 +54,6 @@ python main_lincls.py \
 
 This script uses all the default hyper-parameters as described in the [MoCo v2 paper](https://arxiv.org/abs/1911.05722).
 
-Linear classification results on ImageNet using this repo:
-
-<table>
-<tbody>
-<!-- START TABLE -->
-<!-- TABLE HEADER -->
-<th valign="bottom">Model</th>
-<th valign="bottom">epochs</th>
-<th valign="bottom">top-1 acc.</th>
-<!-- TABLE BODY -->
-<tr>
-<td align="left">ResNet-50</td>
-<td align="center">200</td>
-<td align="center">68.1 ± 0.1</td>
-</tr>
-<tr>
-<td align="left">ResNet-50</td>
-<td align="center">800</td>
-<td align="center">70.6 ± 0.0</td>
-</tr>
-</tbody>
-</table>
-
-Here we run 3 trials (of linear classification) and report mean&plusmn;std: the 3 results of SynCo (200 epochs) are {68.1, 68.0, 68.2}, and of SynCo (800 epochs) are {70.6, 70.6, 70.6}.
-
 ### Semi-supervised Learning
 
 To fine-tune the model end-to-end, including training a linear classifier on features/weights using a pre-trained model on an 8-GPU machine with a subset of the ImageNet training set, run:
@@ -92,20 +66,6 @@ python main_semisup.py \
   --pretrained [your checkpoint path]/checkpoint_0199.pth.tar \
   --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 \
   [your imagenet-folder with train and val folders]
-```
-
-We sweep over the learning rate `{0.01, 0.02, 0.05, 0.1, 0.005}` and the number of epochs `{30, 60}` to select the hyperparameters achieving the best performance on our local validation set to report test performance.
-
-```
-learning_rates=(0.01 0.02 0.05 0.1 0.005)
-
-for lr in "${learning_rates[@]}"; do
-    echo "========== LR: $lr, Percentage 1% ==========="
-    python main_semisup.py -a resnet50 --lr-backbone $lr --lr-classifier 0.5 --epochs 60 --train-percent 1 --weights finetune --batch-size 1024 --pretrained [your checkpoint path]/checkpoint_0799.pth.tar --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 [your imagenet-folder with train and val folders]
-    
-    echo "========== LR: $lr, Percentage 10% ==========="
-    python main_semisup.py -a resnet50 --lr-backbone $lr --lr-classifier 0.5 --epochs 30 --train-percent 10 --weights finetune --batch-size 1024 --pretrained [your checkpoint path]/checkpoint_0799.pth.tar --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 [your imagenet-folder with train and val folders]
-done
 ```
 
 ### Transferring to Object Detection
