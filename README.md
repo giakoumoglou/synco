@@ -73,7 +73,7 @@ Linear classification results on ImageNet using this repo:
 <tr>
 <td align="left">ResNet-50</td>
 <td align="center">800</td>
-<td align="center">70.6 ± 0.2</td>
+<td align="center">70.6 ± 0.0</td>
 </tr>
 </tbody>
 </table>
