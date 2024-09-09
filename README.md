@@ -55,6 +55,31 @@ python main_lincls.py \
 
 This script uses all the default hyper-parameters as described in the [MoCo v2 paper](https://arxiv.org/abs/1911.05722).
 
+<table>
+<tbody>
+<!-- START TABLE -->
+<!-- TABLE HEADER -->
+<th valign="bottom"></th>
+<th valign="bottom">epochs</th>
+<th valign="bottom">top-1 acc.</th>
+<th valign="bottom">model</th>
+<!-- TABLE BODY -->
+<tr>
+<td align="left"><a href="https://arxiv.org/abs/XXXX.XXXXX">ResNet-50</a></td>
+<td align="center">200</td>
+<td align="center">68.1 ± 0.1</td>
+<td align="center"><a href="https://drive.google.com/file/d/1sdc9Q5zIOdyEEL47pq9aJrCkrN6RVPOe/view?usp=drive_link">download</a></td>
+</tr>
+<tr>
+<td align="left"><a href="https://arxiv.org/abs/XXXX.XXXXX">ResNet-50</a></td>
+<td align="center">800</td>
+<td align="center">70.6 ± 0.0</td>
+<td align="center"><a href="https://drive.google.com/file/d/1ZOoUmB6slrQxGRA9AdaCeIN3J-r6NaWI/view?usp=drive_link">download</a></td>
+</tr>
+</tbody>
+</table>
+
+Here we run 3 trials (of linear classification) and report mean&plusmn;std: the 3 results of SynCo (200 epochs) are {68.1, 68.0, 68.2}, and of SynCo (800 epochs) are {70.6, 70.6, 70.6}.
 
 ### Semi-supervised Learning
 
