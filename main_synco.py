@@ -16,8 +16,6 @@ import shutil
 import time
 import warnings
 
-import synco.builder
-import synco.loader
 import torch
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
@@ -31,6 +29,8 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 import torchvision.transforms as transforms
 
+import synco.builder
+import synco.loader
 
 model_names = sorted(name for name in models.__dict__ if name.islower() and not name.startswith("__") and callable(models.__dict__[name]))
 
@@ -54,12 +54,12 @@ parser.add_argument("--dist-backend", default="nccl", type=str, help="distribute
 parser.add_argument("--seed", default=None, type=int, help="seed for initializing training")
 parser.add_argument("--gpu", default=None, type=int, help="GPU id to use")
 parser.add_argument("--multiprocessing-distributed", action="store_true", help="use multi-processing distributed training to launch N processes per node, which has N GPUs. This is the fastest way to use PyTorch for either single node or multi node data parallel training")
-parser.add_argument("--save-dir", default="./output/", type=str, help="directory to save checkpoints (default: './output/')")
+parser.add_argument("--save-dir", default="./", type=str, help="directory to save checkpoints (default: './')")
 
 # moco specific configs:
 parser.add_argument("--moco-dim", default=128, type=int, help="feature dimension (default: 128)")
-parser.add_argument("--moco-k", default=65536, type=int, help="queue size; number of negative keys (default: 65536)",)
-parser.add_argument("--moco-m", default=0.999, type=float, help="moco momentum of updating key encoder (default: 0.999)",)
+parser.add_argument("--moco-k", default=65536, type=int, help="queue size; number of negative keys (default: 65536)")
+parser.add_argument("--moco-m", default=0.999, type=float, help="moco momentum of updating key encoder (default: 0.999)")
 parser.add_argument("--moco-t", default=0.07, type=float, help="softmax temperature (default: 0.07)")
 
 # options for moco v2
@@ -75,10 +75,10 @@ parser.add_argument("--n3", default=256, type=int, help="number of hard negative
 parser.add_argument("--n4", default=64, type=int, help="number of hard negatives to generate by noise injection (default: 64)")
 parser.add_argument("--n5", default=64, type=int, help="number of hard negatives to generate by gradient-based method (default: 64)")
 parser.add_argument("--n6", default=64, type=int, help="number of hard negatives to generate by adversarial method (default: 64)")
-parser.add_argument("--sigma", default=0.01, type=float, help="sigma parameter for gradient-based hard negatives (default: 0.01)") 
-parser.add_argument("--delta", default=0.01, type=float, help="delta parameter for noise injection hard negatives (default: 0.01)") 
-parser.add_argument("--eta", default=0.01, type=float, help="epsilon parameter for adversarial hard negatives (default: 0.01)") 
-parser.add_argument("--warmup-epochs", default=10, type=int, help="number of warmup epochs where no synthetic negatives are generated (default: 10)")
+parser.add_argument("--sigma", default=0.1, type=float, help="sigma parameter for gradient-based hard negatives") 
+parser.add_argument("--delta", default=0.01, type=float, help="delta parameter for noise injection hard negatives") 
+parser.add_argument("--eta", default=0.01, type=float, help="epsilon parameter for adversarial hard negatives") 
+parser.add_argument("--warmup-epochs", default=10, type=int, help="number of warmup epochs")
 
 
 def main():
@@ -147,7 +147,6 @@ def main_worker(gpu, ngpus_per_node, args):
             world_size=args.world_size,
             rank=args.rank,
         )
-        
     # create model
     print("=> creating model '{}'".format(args.arch))
     model = synco.builder.SynCo(
@@ -183,9 +182,7 @@ def main_worker(gpu, ngpus_per_node, args):
             # ourselves based on the total number of GPUs we have
             args.batch_size = int(args.batch_size / ngpus_per_node)
             args.workers = int((args.workers + ngpus_per_node - 1) / ngpus_per_node)
-            model = torch.nn.parallel.DistributedDataParallel(
-                model, device_ids=[args.gpu]
-            )
+            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
         else:
             model.cuda()
             # DistributedDataParallel will divide and allocate batch_size to all
@@ -232,7 +229,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # data loading code
     traindir = os.path.join(args.data, "train")
-    normalize = transforms.Normalize( mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     
     if not args.aug_plus:
         # MoCo v1's aug: the same as InstDisc https://arxiv.org/abs/1805.01978
@@ -284,9 +281,7 @@ def main_worker(gpu, ngpus_per_node, args):
         # train for one epoch
         train(train_loader, model, criterion, optimizer, epoch, args)
 
-        if not args.multiprocessing_distributed or (
-            args.multiprocessing_distributed and args.rank % ngpus_per_node == 0
-        ):
+        if not args.multiprocessing_distributed or (args.multiprocessing_distributed and args.rank % ngpus_per_node == 0):
             save_checkpoint(
                 {
                     "epoch": epoch + 1,
@@ -358,7 +353,6 @@ def save_checkpoint(state, is_best, filename="checkpoint.pth.tar", path='./'):
 
 class AverageMeter:
     """Computes and stores the average and current value"""
-
     def __init__(self, name, fmt=":f"):
         self.name = name
         self.fmt = fmt
@@ -399,7 +393,7 @@ class ProgressMeter:
 
 
 def adjust_learning_rate(optimizer, epoch, args):
-    """Decay the learning rate based on schedule"""
+    """Decays the learning rate based on schedule"""
     lr = args.lr
     if args.cos:  # cosine lr schedule
         lr *= 0.5 * (1.0 + math.cos(math.pi * epoch / args.epochs))
