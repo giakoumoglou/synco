@@ -42,7 +42,7 @@ parser.add_argument("-b", "--batch-size", default=256, type=int, metavar="N", he
 parser.add_argument("--lr", "--learning-rate",  default=0.03,  type=float, metavar="LR",  help="initial learning rate",  dest="lr")
 parser.add_argument("--schedule", default=[60, 80], nargs="*", type=int, help="learning rate schedule (when to drop lr by a ratio)")
 parser.add_argument("--momentum", default=0.9, type=float, metavar="M", help="momentum")
-parser.add_argument("--wd", "--weight-decay", default=0.0, type=float, metavar="W", help="weight decay (default: 0.)",  dest="weight_decay")
+parser.add_argument("--wd", "--weight-decay", default=0.0, type=float, metavar="W", help="weight decay (default: 0.0)",  dest="weight_decay")
 parser.add_argument("-p", "--print-freq", default=10, type=int, metavar="N", help="print frequency (default: 10)")
 parser.add_argument("--resume", default="",  type=str, metavar="PATH", help="path to latest checkpoint (default: none)")
 parser.add_argument("-e", "--evaluate", dest="evaluate", action="store_true", help="evaluate model on validation set")
@@ -154,6 +154,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 if k.startswith("module.encoder_q") and not k.startswith("module.encoder_q.fc"):
                     # remove prefix
                     state_dict[k[len("module.encoder_q.") :]] = state_dict[k]
+                    
                 # delete renamed or unused k
                 del state_dict[k]
 
@@ -177,9 +178,7 @@ def main_worker(gpu, ngpus_per_node, args):
             # ourselves based on the total number of GPUs we have
             args.batch_size = int(args.batch_size / ngpus_per_node)
             args.workers = int((args.workers + ngpus_per_node - 1) / ngpus_per_node)
-            model = torch.nn.parallel.DistributedDataParallel(
-                model, device_ids=[args.gpu]
-            )
+            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
         else:
             model.cuda()
             # DistributedDataParallel will divide and allocate batch_size to all
@@ -202,9 +201,7 @@ def main_worker(gpu, ngpus_per_node, args):
     # optimize only the linear classifier
     parameters = list(filter(lambda p: p.requires_grad, model.parameters()))
     assert len(parameters) == 2  # fc.weight, fc.bias
-    optimizer = torch.optim.SGD(
-        parameters, args.lr, momentum=args.momentum, weight_decay=args.weight_decay
-    )
+    optimizer = torch.optim.SGD(parameters, args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
 
     # optionally resume from a checkpoint
     if args.resume:
@@ -223,7 +220,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 best_acc1 = best_acc1.to(args.gpu)
             model.load_state_dict(checkpoint["state_dict"])
             optimizer.load_state_dict(checkpoint["optimizer"])
-            print( "=> loaded checkpoint '{}' (epoch {})".format(args.resume, checkpoint["epoch"]))
+            print("=> loaded checkpoint '{}' (epoch {})".format(args.resume, checkpoint["epoch"]))
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
 
@@ -232,9 +229,7 @@ def main_worker(gpu, ngpus_per_node, args):
     # data loading code
     traindir = os.path.join(args.data, "train")
     valdir = os.path.join(args.data, "val")
-    normalize = transforms.Normalize(
-        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-    )
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
     train_dataset = datasets.ImageFolder(
         traindir,
@@ -247,7 +242,7 @@ def main_worker(gpu, ngpus_per_node, args):
             ]
         ),
     )
-    
+
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
     else:
@@ -261,18 +256,18 @@ def main_worker(gpu, ngpus_per_node, args):
         pin_memory=True,
         sampler=train_sampler,
     )
-    
+
     val_dataset = datasets.ImageFolder(
-            valdir,
-            transforms.Compose(
-                [
-                    transforms.Resize(256),
-                    transforms.CenterCrop(224),
-                    transforms.ToTensor(),
-                    normalize,
-                ]
-            ),
-        )
+        valdir,
+        transforms.Compose(
+            [
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        ),
+    )
 
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
@@ -301,9 +296,7 @@ def main_worker(gpu, ngpus_per_node, args):
         is_best = acc1 > best_acc1
         best_acc1 = max(acc1, best_acc1)
 
-        if not args.multiprocessing_distributed or (
-            args.multiprocessing_distributed and args.rank % ngpus_per_node == 0
-        ):
+        if not args.multiprocessing_distributed or (args.multiprocessing_distributed and args.rank % ngpus_per_node == 0):
             save_checkpoint(
                 {
                     "epoch": epoch + 1,
@@ -438,12 +431,11 @@ def sanity_check(state_dict, pretrained_weights):
 
         assert (state_dict[k].cpu() == state_dict_pre[k_pre]).all(), "{} is changed in linear classifier training.".format(k)
 
-    print("=> sanity check passed.")
+    print("=> sanity check passed")
 
 
 class AverageMeter:
     """Computes and stores the average and current value"""
-
     def __init__(self, name, fmt=":f"):
         self.name = name
         self.fmt = fmt
@@ -484,7 +476,7 @@ class ProgressMeter:
 
 
 def adjust_learning_rate(optimizer, epoch, args):
-    """Decay the learning rate based on schedule"""
+    """Decays the learning rate based on schedule"""
     lr = args.lr
     for milestone in args.schedule:
         lr *= 0.1 if epoch >= milestone else 1.0
