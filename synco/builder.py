@@ -14,7 +14,7 @@ class SynCo(nn.Module):
     """
     def __init__(self, base_encoder, dim=128, K=65536, m=0.999, T=0.07, mlp=True,
                  n_hard=1024, n1=256, n2=256, n3=256, n4=64, n5=64, n6=64,
-                 sigma=0.01, delta=0.01, eta=0.01,
+                 sigma=0.1, delta=0.01, eta=0.01,
                  warmup_epochs=10,
                  ):
         """
@@ -31,7 +31,7 @@ class SynCo(nn.Module):
         n4 (int): Number of type 4 hard negatives (noise injection) (default: 64)
         n5 (int): Number of type 5 hard negatives (gradient-based) (default: 64)
         n6 (int): Number of type 6 hard negatives (adversarial) (default: 64)
-        sigma (float): Noise level for type 4 hard negatives (default: 0.01)
+        sigma (float): Noise level for type 4 hard negatives (default: 0.1)
         delta (float): Perturbation strength for type 5 hard negatives (default: 0.01)
         eta (float): Step size for type 6 hard negatives (default: 0.01)
         warmup_epochs (int): Number of warmup epochs without hard negatives (default: 10)
@@ -256,12 +256,13 @@ class SynCo(nn.Module):
         hard_negatives_final = torch.stack(hard_negatives_list, dim=1)
         return nn.functional.normalize(hard_negatives_final, dim=-1).detach()
 
-    def forward(self, im_q, im_k, epoch=None):
+    def forward(self, im_q, im_k, epoch=None, return_logits=True):
         """
         Input:
             im_q: a batch of query images
             im_k: a batch of key images
-            epoch: current epoch iteration
+            epoch: current epoch
+            return_logits: whether to return q, k or logits, labels
         Output:
             logits, targets
         """
@@ -281,6 +282,9 @@ class SynCo(nn.Module):
 
             # undo shuffle
             k = self._batch_unshuffle_ddp(k, idx_unshuffle)
+            
+        if not return_logits:
+            return q, k
 
         # compute logits
         # Einstein sum is more intuitive
@@ -352,3 +356,4 @@ def concat_all_gather(tensor):
 
     output = torch.cat(tensors_gather, dim=0)
     return output
+
