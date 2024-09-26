@@ -60,7 +60,7 @@ To fine-tune the model end-to-end, including training a linear classifier on fea
 ```
 python main_semisup.py \
   -a resnet50 \
-  --lr-backbone 0.005 --lr-classifier 0.005 \
+  --lr-backbone [YOUR_LR] --lr-classifier [YOUR_LR] \
   --train-percent 1 --weights finetune \
   --batch-size 256 \
   --pretrained [your checkpoint path]/checkpoint_0199.pth.tar \
@@ -99,8 +99,6 @@ Our pre-trained ResNet-50 models can be downloaded as follows:
 </tr>
 </tbody>
 </table>
-
-
 
 ### License
 
