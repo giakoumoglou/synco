@@ -4,7 +4,7 @@ This is a PyTorch implementation of the [SynCo paper](https://arxiv.org/abs/2410
 ```
 @misc{giakoumoglou2024synco,
   author  = {Nikolaos Giakoumoglou and Tania Stathaki},
-  title   = {Contrastive Learning with Synthetic Hard Negatives},
+  title   = {SynCo: Synthetic Hard Negatives in Contrastive Learning for Better Unsupervised Visual Representations},
   journal = {arXiv preprint arXiv:2410.02401},
   year    = {2024},
 }
