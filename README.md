@@ -1,4 +1,4 @@
-## SynCo: Contrastive Learning with Synthetic Hard Negatives
+## SynCo: Synthetic Hard Negatives in Contrastive Learning for Better Unsupervised Visual Representations
 
 This is a PyTorch implementation of the [SynCo paper](https://arxiv.org/abs/2410.02401):
 ```
