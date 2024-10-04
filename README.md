@@ -1,11 +1,11 @@
 ## SynCo: Contrastive Learning with Synthetic Hard Negatives
 
-This is a PyTorch implementation of the [SynCo paper](https://arxiv.org/abs/XXXX.XXXXX):
+This is a PyTorch implementation of the [SynCo paper](https://arxiv.org/abs/2410.02401):
 ```
 @misc{giakoumoglou2024synco,
   author  = {Nikolaos Giakoumoglou and Tania Stathaki},
   title   = {Contrastive Learning with Synthetic Hard Negatives},
-  journal = {arXiv preprint arXiv:XXXX.XXXXX},
+  journal = {arXiv preprint arXiv:2410.02401},
   year    = {2024},
 }
 ```
@@ -86,13 +86,13 @@ Our pre-trained ResNet-50 models can be downloaded as follows:
 <th valign="bottom">model</th>
 <!-- TABLE BODY -->
 <tr>
-<td align="left"><a href="https://arxiv.org/abs/XXXX.XXXXX">SynCo</a></td>
+<td align="left"><a href="https://arxiv.org/abs/2410.02401">SynCo</a></td>
 <td align="center">200</td>
 <td align="center">68.1</td>
 <td align="center"><a href="https://drive.google.com/file/d/1sdc9Q5zIOdyEEL47pq9aJrCkrN6RVPOe/view?usp=drive_link">download</a></td>
 </tr>
 <tr>
-<td align="left"><a href="https://arxiv.org/abs/XXXX.XXXXX">SynCo</a></td>
+<td align="left"><a href="https://arxiv.org/abs/2410.02401">SynCo</a></td>
 <td align="center">800</td>
 <td align="center">70.6</td>
 <td align="center"><a href="https://drive.google.com/file/d/1ZOoUmB6slrQxGRA9AdaCeIN3J-r6NaWI/view?usp=drive_link">download</a></td>
