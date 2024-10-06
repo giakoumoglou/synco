@@ -58,7 +58,7 @@ Below are the results on Pascal VOC 2007 test, fine-tuned on 2007+2012 trainval 
 </tr>
 </tr>
 <tr><td align="left">ImageNet-1M, SynCo, 200ep</td>
-<td align="center">82.5</td>
+<td align="center">82.6</td>
 <td align="center">57.2</td>
 <td align="center">63.9</td>
 </tr>
