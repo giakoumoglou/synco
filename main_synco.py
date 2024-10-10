@@ -56,7 +56,7 @@ parser.add_argument("--gpu", default=None, type=int, help="GPU id to use")
 parser.add_argument("--multiprocessing-distributed", action="store_true", help="use multi-processing distributed training to launch N processes per node, which has N GPUs. This is the fastest way to use PyTorch for either single node or multi node data parallel training")
 parser.add_argument("--save-dir", default="./", type=str, help="directory to save checkpoints (default: './')")
 
-# moco specific configs:
+# moco specific configs
 parser.add_argument("--moco-dim", default=128, type=int, help="feature dimension (default: 128)")
 parser.add_argument("--moco-k", default=65536, type=int, help="queue size; number of negative keys (default: 65536)")
 parser.add_argument("--moco-m", default=0.999, type=float, help="moco momentum of updating key encoder (default: 0.999)")
