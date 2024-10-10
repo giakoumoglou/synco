@@ -14,7 +14,7 @@ class SynCo(nn.Module):
     """
     def __init__(self, base_encoder, dim=128, K=65536, m=0.999, T=0.07, mlp=True,
                  n_hard=1024, n1=256, n2=256, n3=256, n4=64, n5=64, n6=64,
-                 sigma=0.1, delta=0.01, eta=0.01,
+                 sigma=0.01, delta=0.01, eta=0.01,
                  warmup_epochs=10,
                  ):
         """
