@@ -75,7 +75,7 @@ parser.add_argument("--n3", default=256, type=int, help="number of hard negative
 parser.add_argument("--n4", default=64, type=int, help="number of hard negatives to generate by noise injection (default: 64)")
 parser.add_argument("--n5", default=64, type=int, help="number of hard negatives to generate by gradient-based method (default: 64)")
 parser.add_argument("--n6", default=64, type=int, help="number of hard negatives to generate by adversarial method (default: 64)")
-parser.add_argument("--sigma", default=0.1, type=float, help="sigma parameter for gradient-based hard negatives") 
+parser.add_argument("--sigma", default=0.01, type=float, help="sigma parameter for gradient-based hard negatives") 
 parser.add_argument("--delta", default=0.01, type=float, help="delta parameter for noise injection hard negatives") 
 parser.add_argument("--eta", default=0.01, type=float, help="epsilon parameter for adversarial hard negatives") 
 parser.add_argument("--warmup-epochs", default=10, type=int, help="number of warmup epochs")
