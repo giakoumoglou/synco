@@ -293,7 +293,6 @@ class SynCo(nn.Module):
         # negative logits: NxK
         l_neg = torch.einsum("nc,ck->nk", [q, self.queue.T.clone().detach()])
         
-        
         if epoch is None or epoch >= self.warmup_epochs:
             # N-hardest negatives
             idxs_hard = self.find_hard_negatives(l_neg)
