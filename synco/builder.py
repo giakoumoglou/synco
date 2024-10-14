@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (C) 2024. All rights reserved.
 # All rights reserved.
 #
@@ -170,6 +172,7 @@ class SynCo(nn.Module):
     def hard_negatives_interpolation(self, q, idxs_hard):
         """
         Type 1 hard negatives: interpolated
+        s = a * q + (1-a) * n
         """
         batch_size, device = q.shape[0], q.device
         idxs = torch.randint(0, self.n_hard, size=(batch_size, self.n1), device=device)
@@ -181,6 +184,7 @@ class SynCo(nn.Module):
     def hard_negatives_extrapolation(self, q, idxs_hard):
         """
         Type 2 hard negatives: extrapolated
+        s = n + b * (n - q)
         """
         batch_size, device = q.shape[0], q.device
         idxs = torch.randint(0, self.n_hard, size=(batch_size, self.n2), device=device)
@@ -192,6 +196,7 @@ class SynCo(nn.Module):
     def hard_negatives_mixup(self, q, idxs_hard):
         """
         Type 3 hard negatives: mixup
+        s = g * n1 + (1-g) * n2
         """
         batch_size, device = q.shape[0], q.device
         batch_size, device = q.shape[0], q.device
@@ -205,6 +210,7 @@ class SynCo(nn.Module):
     def hard_negatives_noise_inject(self, q, idxs_hard):
         """
         Type 4 hard negatives: noise injected
+        s = n + N(0, var)
         """
         batch_size, device = q.shape[0], q.device
         idxs = torch.randint(0, self.n_hard, size=(batch_size, self.n4), device=device)
@@ -212,47 +218,41 @@ class SynCo(nn.Module):
         noise = torch.randn_like(hard_negatives) * self.sigma
         return nn.functional.normalize(hard_negatives + noise, dim=-1).detach()
         
-    def hard_negatives_grad(self, q, idxs_hard, epsilon=1e-5):
+    def hard_negatives_autograd_1(self, q, idxs_hard):
         """
-        Type 5 hard negatives: perturbed
+        Type 5 hard negatives: perturbed using autograd
+        s = n + d * grad(q, n)
         """
         batch_size, device = q.shape[0], q.device
         idxs = torch.randint(0, self.n_hard, size=(batch_size, self.n5), device=device)
-        hard_negatives = self.queue[torch.gather(idxs_hard, dim=1, index=idxs)].detach().clone()
+        hard_negatives = self.queue[idxs_hard[torch.arange(batch_size).unsqueeze(1), idxs]].detach().clone()
         hard_negatives_list = []
         for i in range(hard_negatives.size(1)):
-            neighbor = hard_negatives[:, i, :].detach().clone()
-            perturbation = torch.randn_like(neighbor) * epsilon
-            perturbed_neighbor_plus = neighbor + perturbation
-            perturbed_neighbor_minus = neighbor - perturbation
-            similarity_plus = torch.einsum('nc,nc->n', [q, perturbed_neighbor_plus])
-            similarity_minus = torch.einsum('nc,nc->n', [q, perturbed_neighbor_minus])
-            approx_gradient = (similarity_plus - similarity_minus) / (2 * epsilon)
-            approx_gradient = approx_gradient.unsqueeze(-1)
-            perturbed_neighbor = neighbor + self.delta * approx_gradient * perturbation
+            neighbor = hard_negatives[:, i, :].detach().clone().requires_grad_(True)
+            similarity = torch.einsum('nc,nc->n', [q, neighbor])
+            grad = torch.autograd.grad(similarity.sum(), neighbor, create_graph=False)[0]
+            perturbed_neighbor = neighbor + self.delta * grad
             hard_negatives_list.append(perturbed_neighbor.detach())
+        
         hard_negatives_final = torch.stack(hard_negatives_list, dim=1)
         return nn.functional.normalize(hard_negatives_final, dim=-1).detach()
 
-    def hard_negatives_adversarial(self, q, idxs_hard, epsilon=1e-5):
+    def hard_negatives_autograd_2(self, q, idxs_hard):
         """
-        Type 6 hard negatives: adversarial
+        Type 6 hard negatives: adversarial using autograd
+        s = n + e * sgn(grad(q, n))
         """
         batch_size, device = q.shape[0], q.device
         idxs = torch.randint(0, self.n_hard, size=(batch_size, self.n6), device=device)
-        hard_negatives = self.queue[torch.gather(idxs_hard, dim=1, index=idxs)].clone().detach()
+        hard_negatives = self.queue[idxs_hard[torch.arange(batch_size).unsqueeze(1), idxs]].clone().detach()
         hard_negatives_list = []
         for i in range(hard_negatives.size(1)):
-            neighbor = hard_negatives[:, i, :].detach().clone()
-            perturbation = torch.randn_like(neighbor) * epsilon
-            perturbed_neighbor_plus = neighbor + perturbation
-            perturbed_neighbor_minus = neighbor - perturbation
-            similarity_plus = torch.einsum('nc,nc->n', [q, perturbed_neighbor_plus])
-            similarity_minus = torch.einsum('nc,nc->n', [q, perturbed_neighbor_minus])
-            approx_gradient = (similarity_plus - similarity_minus) / (2 * epsilon)
-            approx_gradient = approx_gradient.unsqueeze(-1)
-            perturbed_neighbor = neighbor + self.eta * approx_gradient.sign() * perturbation
+            neighbor = hard_negatives[:, i, :].detach().clone().requires_grad_(True)
+            similarity = torch.einsum('nc,nc->n', [q, neighbor])
+            grad = torch.autograd.grad(similarity.sum(), neighbor, create_graph=False)[0]
+            perturbed_neighbor = neighbor + self.eta * grad.sign()
             hard_negatives_list.append(perturbed_neighbor.detach())
+        
         hard_negatives_final = torch.stack(hard_negatives_list, dim=1)
         return nn.functional.normalize(hard_negatives_final, dim=-1).detach()
 
@@ -319,12 +319,12 @@ class SynCo(nn.Module):
                 l_neg = torch.cat([l_neg, l_neg_4], dim=1)
                 
             if self.use_type5:
-                h5 = self.hard_negatives_grad(q, idxs_hard)
+                h5 = self.hard_negatives_autograd_1(q, idxs_hard)
                 l_neg_5 = torch.einsum("nc,nkc->nk", [q, h5])
                 l_neg = torch.cat([l_neg, l_neg_5], dim=1)
 
             if self.use_type6:
-                h6 = self.hard_negatives_adversarial(q, idxs_hard)
+                h6 = self.hard_negatives_autograd_2(q, idxs_hard)
                 l_neg_6 = torch.einsum("nc,nkc->nk", [q, h6])
                 l_neg = torch.cat([l_neg, l_neg_6], dim=1)
 
@@ -355,4 +355,3 @@ def concat_all_gather(tensor):
 
     output = torch.cat(tensors_gather, dim=0)
     return output
-
