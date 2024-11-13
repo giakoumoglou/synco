@@ -1,5 +1,7 @@
 ## SynCo: Synthetic Hard Negatives in Contrastive Learning for Better Unsupervised Visual Representations
 
+![Inception Top](https://theguycancook.com/blog/wp-content/uploads/2011/02/inception-top.jpg)
+
 This is a PyTorch implementation of the [SynCo paper](https://arxiv.org/abs/2410.02401):
 ```
 @misc{giakoumoglou2024synco,
