@@ -1,10 +1,14 @@
 _BASE_: "coco_R_50_C4_2x.yaml"
-OUTPUT_DIR: "./output/coco/"
+OUTPUT_DIR: "./output/coco2/"
 MODEL:
   PIXEL_MEAN: [123.675, 116.280, 103.530]
   PIXEL_STD: [58.395, 57.120, 57.375]
-  WEIGHTS: "See Instructions"
+  WEIGHTS: "./output/coco2/model_0134999.pth"
   RESNETS:
     STRIDE_IN_1X1: False
 INPUT:
   FORMAT: "RGB"
+SOLVER:
+  BASE_LR: 0.01
+  MAX_ITER: 45000
+  WARMUP_FACTOR: 0.0

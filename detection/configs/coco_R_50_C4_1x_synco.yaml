@@ -1,5 +1,5 @@
-_BASE_: "pascal_voc_R_50_C4_24k.yaml"
-OUTPUT_DIR: "./output/voc/"
+_BASE_: "coco_R_50_C4_1x.yaml"
+OUTPUT_DIR: "./output/coco/"
 MODEL:
   PIXEL_MEAN: [123.675, 116.280, 103.530]
   PIXEL_STD: [58.395, 57.120, 57.375]
