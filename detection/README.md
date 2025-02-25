@@ -1,5 +1,5 @@
 
-## SynCo: Transferring to Detection
+## _SynCo_: Transferring to Detection
 
 The `train_net.py` script reproduces the object detection experiments on Pascal VOC and COCO.
 
