@@ -1,10 +1,10 @@
-## __SynCo__: Synthetic Hard Negatives for Contrastive Visual Representation Learning
+## _SynCo_: Synthetic Hard Negatives for Contrastive Visual Representation Learning
 
 This is a PyTorch implementation of the [SynCo paper](https://arxiv.org/abs/2410.02401):
 ```
 @misc{giakoumoglou2024synco,
   author  = {Nikolaos Giakoumoglou and Tania Stathaki},
-  title   = {SynCo: Synthetic Hard Negatives in Contrastive Learning for Better Unsupervised Visual Representations},
+  title   = {SynCo: Synthetic Hard Negatives for Contrastive Visual Representation Learning},
   journal = {arXiv preprint arXiv:2410.02401},
   year    = {2024},
 }
