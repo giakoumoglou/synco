@@ -7,4 +7,4 @@ cd $PBS_O_WORKDIR
 eval "$(~/anaconda3/bin/conda shell.bash hook)"
 source activate torch
 
-python main_lincls.py -a resnet50 --lr 30.0 --batch-size 256 --pretrained $EPHEMERAL/synco/synco_r50_800ep/checkpoint_0799.pth.tar --dist-url 'tcp://localhost:19001' --multiprocessing-distributed --world-size 1 --rank 0 $HOME/datasets/imagenet/
+python main_lincls.py -a resnet50 --lr 30.0 --batch-size 256 --pretrained ./checkpoints/synco_r50_800ep/checkpoint_0799.pth.tar --dist-url 'tcp://localhost:19001' --multiprocessing-distributed --world-size 1 --rank 0 ./datasets/imagenet/
