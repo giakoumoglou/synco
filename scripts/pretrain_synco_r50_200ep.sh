@@ -1,0 +1,24 @@
+#!/bin/bash
+#PBS -lselect=1:ncpus=16:mem=64gb:ngpus=4
+#PBS -lwalltime=72:00:00
+
+cd $PBS_O_WORKDIR
+
+eval "$(~/anaconda3/bin/conda shell.bash hook)"
+source activate torch
+
+PORT=$((10000 + RANDOM % 10000))
+
+python main_synco.py \
+	-a resnet50 \
+	--lr 0.03 \
+	--batch-size 256 \
+	--epochs 200 \
+	--resume $EPHEMERAL/synco/syncov2_r50_200ep/checkpoint_0168.pth.tar \
+	--save-dir $EPHEMERAL/synco/syncov2_r50_200ep/ \
+	--dist-url "tcp://localhost:$PORT" \
+	--multiprocessing-distributed \
+	--world-size 1 --rank 0 \
+	--mlp --moco-t 0.2 --aug-plus --cos \
+	--n-hard 1024 --n1 256 --n2 256 --n3 256 --n4 64 --n5 64 --n6 64 \
+	$HOME/datasets/imagenet/
