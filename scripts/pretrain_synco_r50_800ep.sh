@@ -14,8 +14,8 @@ python main_synco.py \
 	--lr 0.03 \
 	--batch-size 256 \
 	--epochs 800 \
-	--resume $EPHEMERAL/synco/syncov2_r50_800ep/checkpoint_0660.pth.tar \
-	--save-dir $EPHEMERAL/synco/syncov2_r50_800ep/ \
+	--resume $HOME/code/synco/output/synco_r50_800ep/checkpoint_0660.pth.tar \
+	--save-dir $HOME/code/synco/output/synco_r50_800ep/ \
 	--dist-url "tcp://localhost:$PORT" \
 	--multiprocessing-distributed \
 	--world-size 1 --rank 0 \

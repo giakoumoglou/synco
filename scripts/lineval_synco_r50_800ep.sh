@@ -13,7 +13,7 @@ python main_lincls.py \
 	-a resnet50 \
 	--lr 30.0 \
 	--batch-size 256 \
-	--pretrained $EPHEMERAL/synco/syncov2_r50_800ep/checkpoint_0799.pth.tar \
+	--pretrained $HOME/code/synco/output/synco_r50_800ep/checkpoint_0799.pth.tar \
 	--dist-url "tcp://localhost:$PORT" \
 	--multiprocessing-distributed \
 	--world-size 1 --rank 0 \

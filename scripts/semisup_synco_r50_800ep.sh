@@ -21,7 +21,7 @@ for lr in "${learning_rates[@]}"; do
 		--train-percent 100 \
 		--weights finetune \
 		--batch-size 1024 \
-		--pretrained $EPHEMERAL/synco/syncov2_r50_800ep/checkpoint_0799.pth.tar \
+		--pretrained ./ckpts/synco_r50_800ep_pretrain.pth.tar \ \
 		--dist-url "tcp://localhost:$PORT" \
 		--multiprocessing-distributed \
 		--world-size 1 --rank 0 \
@@ -41,7 +41,7 @@ for lr in "${learning_rates[@]}"; do
 		--train-percent 1 \
 		--weights finetune \
 		--batch-size 1024 \
-		--pretrained $EPHEMERAL/synco/syncov2_r50_800ep/checkpoint_0799.pth.tar \
+		--pretrained ./ckpts/synco_r50_800ep_pretrain.pth.tar \
 		--dist-url "tcp://localhost:$PORT" \
 		--multiprocessing-distributed \
 		--world-size 1 --rank 0 \
@@ -56,7 +56,7 @@ for lr in "${learning_rates[@]}"; do
 		--train-percent 10 \
 		--weights finetune \
 		--batch-size 1024 \
-		--pretrained $EPHEMERAL/synco/syncov2_r50_800ep/checkpoint_0799.pth.tar \
+		--pretrained ./ckpts/synco_r50_800ep_pretrain.pth.tar \
 		--dist-url "tcp://localhost:$PORT" \
 		--multiprocessing-distributed \
 		--world-size 1 --rank 0 \
