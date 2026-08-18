@@ -10,10 +10,6 @@ This is a PyTorch implementation of the [SynCo paper](https://arxiv.org/abs/2410
 }
 ```
 
-<p align="center">
-  <img src="https://i.postimg.cc/rpf9pdX8/CVPR-2026-Syn-Co-Synthetic-Hard-Negatives-for-Contrastive-Visual-Representation-Learning.png" alt="Teaser" width="50%">
-</p>
-
 ### Preparation
 
 Install PyTorch and ImageNet dataset following the [official PyTorch ImageNet training code](https://github.com/pytorch/examples/tree/master/imagenet).
