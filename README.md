@@ -1,5 +1,7 @@
 ## _SynCo_: Synthetic Hard Negatives for Contrastive Visual Representation Learning
 
+<img width="1173" height="376" alt="image" src="[https://i.postimg.cc/xj6Dvq0j/teaser-vitamins.png](https://i.postimg.cc/rpf9pdX8/CVPR-2026-Syn-Co-Synthetic-Hard-Negatives-for-Contrastive-Visual-Representation-Learning.png)" />
+
 This is a PyTorch implementation of the [SynCo paper](https://arxiv.org/abs/2410.02401):
 ```
 @misc{giakoumoglou2024synco,
